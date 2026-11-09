@@ -2,6 +2,16 @@
 
 Hands-on notebooks for the **BIOINFO GIW ISCB-Asia 2026 workshop**. 
 
+## Workshop program
+| Session | Topic | Instructor |
+|---|---|---|
+| **1** (1 h) | **Foundations of Agentic AI and a clinical case study.** 1a: what makes a system an agent (model, instructions, tools, skills, memory; prompt vs agent engineering; evaluating outputs and failures). 1b: a clinical feature-selection problem solved end to end with a multi-agent pipeline | Philip Freda |
+| **2** (2 h) | **Hands-on: from visual builders to multi-agent pipelines.** 2a: agents in n8n, no code (~25 min). 2b: agents in Python, comparing ReAct, plan-and-execute and reflection (~40 min). 2c: a multi-agent pipeline in LangGraph (~40 min) | Attri Ghosh |
+| **3** (1 h) | **What's next for AI agents, and panel Q&A.** Self-learning agents and open challenges, then an open discussion on cost, data privacy and where agents should and shouldn't be trusted | Philip Freda and Attri Ghosh |
+
+**This repository contains the Session 2 notebooks** (2a, 2b and 2c below). They share one clinical question, what predicts heart failure after a heart attack (myocardial infarction, MI), so each builds on the one before.
+
+## Session 2 notebooks
 | Session | Notebook | What you build | Needs |
 |---|---|---|---|
 | **2a** | `01_gui_agent_builders.ipynb` | A research team in **n8n** (no code): a Literature Scout, a human review step, a Data Analyst, and a report. Also the same team using an existing **MCP** server | n8n (Docker or the n8n Cloud trial) and an LLM key |
