@@ -1,0 +1,15 @@
+# Python 3.10 or newer. Tested with langchain 1.2, langgraph 1.0, scikit-learn 1.7, statsmodels 0.15.
+ipykernel
+pandas>=2.0
+scipy>=1.11
+scikit-learn>=1.5
+statsmodels>=0.14
+pydantic>=2
+python-dotenv>=1.0
+langchain>=1.2
+langgraph>=1.0
+langchain-anthropic>=1.7
+langchain-openai>=1.1
+litellm   # only used to estimate the dollar cost of each run (optional)
+langchain-mcp-adapters>=0.3   # connects MCP servers to LangChain (Session 3)
+cryptography<49   # 49+ has no Intel-Mac build, so pip would try to compile it

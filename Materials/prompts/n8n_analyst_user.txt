@@ -1,0 +1,4 @@
+Research question: {{ $('When chat message received').first().json.chatInput }}
+
+Literature Scout findings (approved by the PI):
+{{ $('Literature Scout').first().json.output }}

@@ -1,0 +1,325 @@
+{
+  "name": "MI Research Team (PubMed MCP)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "68325dd8-2b55-4add-86a9-22e5463d1325",
+      "name": "When chat message received",
+      "webhookId": "96e37cef-96c7-4dbc-86ad-14415c32f58e"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are the Literature Scout on a research team studying heart failure after acute myocardial infarction (MI).\nToday's date is {{ $now.toFormat('yyyy/MM/dd') }}.\n\nTools (from a PubMed server):\n- pubmed_search_articles: searches PubMed and returns PubMed IDs (PMIDs). Useful inputs: query (PubMed syntax, MeSH terms allowed), maxResults, sort, and dateRange.\n- pubmed_fetch_articles: given a list of PMIDs, returns titles, abstracts, journals, and more.\n\nHow to work:\n1. Turn the request into a short PubMed query, for example: \"Myocardial Infarction\"[MeSH] AND \"Heart Failure\"[MeSH]. Use dateRange only when the request names a time window. It needs BOTH minDate and maxDate (YYYY/MM/DD), so work them out from today's date.\n2. Search, then fetch the 5 most relevant PMIDs in one call (fewer only if fewer than 5 are relevant). If a search returns nothing, broaden the query and try again.\n3. Summarize each paper in 2-3 sentences under its own heading: design, population, main finding. Write your answer in Markdown.\n4. Cite every claim with its PMID. Never cite a PMID you did not retrieve with a tool.\n5. Add one line headed \"What this means for our team\".\n6. End with a \"References\" list of every paper you fetched, one per line: title, journal, year, PMID, and the link https://pubmed.ncbi.nlm.nih.gov/<PMID>/\n\nFormatting: give each paper and each risk factor its own ### heading, and use bullet points under it. Do not use numbered lists anywhere in your answer."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -160,
+        -32
+      ],
+      "id": "6fdb8f1d-3a8d-4986-be68-86793b61d784",
+      "name": "Literature Scout"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://pubmed.caseyjhand.com/mcp",
+        "serverTransport": "httpStreamable",
+        "authentication": "none",
+        "include": "selected",
+        "includeTools": [
+          "pubmed_search_articles",
+          "pubmed_fetch_articles"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        -60,
+        192
+      ],
+      "id": "1f035cdf-b7e8-48f0-8b85-c1051b2ed866",
+      "name": "PubMed MCP"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "=The Literature Scout has finished. Please review its findings before the Data Analyst starts.\n\n**Check that:**\n- the papers are relevant to heart failure after MI,\n- every PMID comes with a title that you can find on PubMed,\n- the risk factors the Scout lists are the ones we want to test in our own data.\n\nChoose **Approve** to continue to the Data Analyst, or **Decline** to stop here.\n\n---\n\n{{ $('Literature Scout').first().json.output }}",
+        "responseType": "approval",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Approve",
+            "disapproveLabel": "Decline"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "ef776eac-1a79-4d3d-bcc2-ad2c792719de",
+      "name": "Human Review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "236b73a3-9cca-4b59-a908-718531faf485",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "ec2d0e8a-7130-433e-a1ac-45bfeb9e56d6",
+      "name": "Human Decision"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "message": "\ud83d\uded1 **Workflow stopped.** The Literature Scout's findings were not approved, so no report was created. Change your question or the Scout's instructions, and ask again.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        160
+      ],
+      "id": "8c2ccf17-c000-4cf9-9e27-a06583add15a",
+      "name": "Not approved"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Research question: {{ $('When chat message received').first().json.chatInput }}\n\nLiterature Scout findings (approved by the PI):\n{{ $('Literature Scout').first().json.output }}",
+        "options": {
+          "systemMessage": "You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team's research question and the Literature Scout's findings. Your job is to check those findings against our own patients and to plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995.\nOutcome: heart_failure, chronic heart failure during the hospital stay, in 394 patients (23.2%). There is no follow-up after discharge.\n\nTool:\n- lookup_variable: give it a variable name or a keyword. It returns the matching variables with their type, when each is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure. \"No variable matches\" means our dataset does not have it. It only looks up results computed in advance; it cannot calculate anything new.\n\nHow to work:\n1. For each risk factor from the Literature Scout, call lookup_variable with its name or a keyword. If several variables could stand for it, look at the candidates. If nothing matches, it is \"Not in our dataset\".\n2. Look up any other variable you want to recommend.\n3. Quote numbers only from the tool's results, exactly. Never estimate or invent numbers.\n\nWrite your answer in Markdown with these sections:\n1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from lookup_variable | Usable? (Yes / Proxy / Not in our dataset).\n2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences.\n3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere, including inside tables.\n- Inside the sections use bullet points, not numbered lists: numbered lists restart at 1 in the report.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Keep it concise."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "4fcfe62b-2683-4349-95ec-13e6b5e61764",
+      "name": "Data Analyst"
+    },
+    {
+      "parameters": {
+        "description": "Look up variables in our MI patient dataset (1,700 patients). Input a variable name or a keyword, for example diabetes, potassium, or prior_heart_failure. Returns up to 8 matching variables with: type, when it is known (admission or later), % missing, meaning, and its precomputed unadjusted link with heart failure. Returns \"No variable matches\" if the dataset does not have it. It only looks up results computed in advance; it cannot calculate anything new.",
+        "language": "javaScript",
+        "jsCode": "// lookup_variable: looks up our precomputed data profile (Section 1). It does not calculate anything.\nconst PROFILE = [\n{\"name\": \"age\", \"type\": \"integer\", \"known_at\": \"admission\", \"missing\": \"0.47%\", \"meaning\": \"Age of patient (years)\", \"association\": \"mean 64.85 with HF vs 60.95 without (p<0.001)\"},\n{\"name\": \"sex\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.00%\", \"meaning\": \"Sex\", \"association\": \"HF 20.0% if male vs 28.5% if female (p<0.001)\"},\n{\"name\": \"prior_mi_count\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"0.24%\", \"meaning\": \"Quantity of myocardial infarctions in the anamnesis. Codes: 0=zero; 1=one; 2=two; 3=three or more\", \"association\": \"HF by code: 0: 22.7%, 1: 23.2%, 2: 27.2%, 3: 22.8% (p=0.691)\"},\n{\"name\": \"exertional_angina_history\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"6.24%\", \"meaning\": \"Exertional angina pectoris in the anamnesis. Codes: 0=never; 1=during the last year; 2=one year ago; 3=two years ago; 4=three years ago; 5=4-5 years ago; 6=more than 5 years ago\", \"association\": \"HF by code: 0: 23.3%, 1: 26.7%, 2: 18.2%, 3: 25.6%, 4: 14.5%, 5: 21.6%, 6: 26.8% (p=0.176)\"},\n{\"name\": \"angina_functional_class\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"4.29%\", \"meaning\": \"Functional class of angina pectoris in the last year. Codes: 0=no angina; 1=I FC; 2=II FC; 3=III FC; 4=IV FC\", \"association\": \"HF by code: 0: 23.1%, 1: 23.4%, 2: 24.4%, 3: 20.4%, 4: 18.2% (n=11) (p=0.934)\"},\n{\"name\": \"recent_coronary_disease\", \"type\": \"categorical\", \"known_at\": \"admission\", \"missing\": \"3.00%\", \"meaning\": \"Coronary heart disease in recent weeks/days before admission. Codes: 0=none; 1=exertional angina; 2=unstable angina\", \"association\": \"HF by code: 0: 21.8%, 1: 25.0%, 2: 23.6% (p=0.503)\"},\n{\"name\": \"family_history_coronary_disease\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"95.76%\", \"meaning\": \"Heredity on coronary heart disease\", \"association\": \"HF 3.7% (n=27) if burdened vs 15.6% if not burdened (p=0.121)\"},\n{\"name\": \"hypertension_stage\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"0.53%\", \"meaning\": \"Presence of essential hypertension. Codes: 0=none; 1=Stage 1; 2=Stage 2; 3=Stage 3\", \"association\": \"HF by code: 0: 22.0%, 1: 18.2% (n=11), 2: 22.3%, 3: 31.8% (p=0.027)\"},\n{\"name\": \"symptomatic_hypertension\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.47%\", \"meaning\": \"Symptomatic hypertension\", \"association\": \"HF 22.8% if yes vs 23.2% if no (p=0.939)\"},\n{\"name\": \"hypertension_duration\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"14.59%\", \"meaning\": \"Duration of arterial hypertension. Codes: 0=none; 1=one year; 2=two years; 3=three years; 4=four years; 5=five years; 6=6-10 years; 7=more than 10 years\", \"association\": \"HF by code: 0: 21.8%, 1: 22.6%, 2: 17.2%, 3: 20.7%, 4: 18.2% (n=22), 5: 28.8%, 6: 23.6%, 7: 24.8% (p=0.757)\"},\n{\"name\": \"prior_heart_failure\", \"type\": \"categorical\", \"known_at\": \"admission\", \"missing\": \"3.18%\", \"meaning\": \"Presence of chronic heart failure in the anamnesis. Codes: 0=no chronic heart failure; 1=stage I; 2=stage II (right ventricular systolic dysfunction); 3=stage II (left ventricular systolic dysfunction); 4=stage IIB (left and right ventricular systolic dysfunction)\", \"association\": \"HF by code: 0: 18.7%, 1: 87.4%, 2: 22.2% (n=27), 3: 31.0% (n=29), 4: 31.6% (n=19) (p<0.001)\"},\n{\"name\": \"history_arrhythmia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Observing of arrhythmia in the anamnesis\", \"association\": \"HF 28.6% if yes vs 23.2% if no (p=0.418)\"},\n{\"name\": \"history_premature_atrial_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Premature atrial contractions in the anamnesis\", \"association\": \"HF 75.0% (n=4) if yes vs 23.2% if no (p=0.014)\"},\n{\"name\": \"history_premature_ventricular_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Premature ventricular contractions in the anamnesis\", \"association\": \"HF 31.6% (n=19) if yes vs 23.3% if no (p=0.394)\"},\n{\"name\": \"history_paroxysmal_atrial_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Paroxysms of atrial fibrillation in the anamnesis\", \"association\": \"HF 31.4% if yes vs 23.2% if no (p=0.253)\"},\n{\"name\": \"history_persistent_atrial_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Persistent form of atrial fibrillation in the anamnesis\", \"association\": \"HF 51.7% (n=29) if yes vs 22.8% if no (p<0.001)\"},\n{\"name\": \"history_ventricular_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Ventricular fibrillation in the anamnesis\", \"association\": \"HF 100.0% (n=1) if yes vs 23.3% if no (p=0.070)\"},\n{\"name\": \"history_ventricular_tachycardia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.24%\", \"meaning\": \"Ventricular paroxysmal tachycardia in the anamnesis\", \"association\": \"HF 0.0% (n=4) if yes vs 23.4% if no (p=0.269)\"},\n{\"name\": \"history_av_block_1st_degree\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"First-degree AV block in the anamnesis\", \"association\": \"HF 50.0% (n=2) if yes vs 23.3% if no (p=0.373)\"},\n{\"name\": \"history_av_block_3rd_degree\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"Third-degree AV block in the anamnesis\", \"association\": \"HF 0.0% (n=3) if yes vs 23.4% if no (p=0.338)\"},\n{\"name\": \"history_lbbb_anterior_branch\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"LBBB (anterior branch) in the anamnesis\", \"association\": \"HF 36.4% (n=11) if yes vs 23.3% if no (p=0.307)\"},\n{\"name\": \"history_incomplete_lbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"Incomplete LBBB in the anamnesis\", \"association\": \"HF 0.0% (n=1) if yes vs 23.4% if no (p=0.581)\"},\n{\"name\": \"history_complete_lbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"Complete LBBB in the anamnesis\", \"association\": \"HF 0.0% (n=6) if yes vs 23.4% if no (p=0.175)\"},\n{\"name\": \"history_incomplete_rbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"Incomplete RBBB in the anamnesis\", \"association\": \"HF 100.0% (n=2) if yes vs 23.3% if no (p=0.010)\"},\n{\"name\": \"history_complete_rbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.06%\", \"meaning\": \"Complete RBBB in the anamnesis\", \"association\": \"HF 66.7% (n=3) if yes vs 23.3% if no (p=0.076)\"},\n{\"name\": \"diabetes\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.65%\", \"meaning\": \"Diabetes mellitus in the anamnesis\", \"association\": \"HF 36.8% if yes vs 21.2% if no (p<0.001)\"},\n{\"name\": \"obesity\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Obesity in the anamnesis\", \"association\": \"HF 31.0% if yes vs 23.1% if no (p=0.236)\"},\n{\"name\": \"thyrotoxicosis\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Thyrotoxicosis in the anamnesis\", \"association\": \"HF 15.4% (n=13) if yes vs 23.4% if no (p=0.497)\"},\n{\"name\": \"chronic_bronchitis\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.41%\", \"meaning\": \"Chronic bronchitis in the anamnesis\", \"association\": \"HF 39.6% if yes vs 21.8% if no (p<0.001)\"},\n{\"name\": \"obstructive_chronic_bronchitis\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.41%\", \"meaning\": \"Obstructive chronic bronchitis in the anamnesis\", \"association\": \"HF 24.8% if yes vs 23.1% if no (p=0.669)\"},\n{\"name\": \"asthma\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.41%\", \"meaning\": \"Bronchial asthma in the anamnesis\", \"association\": \"HF 29.7% if yes vs 23.1% if no (p=0.342)\"},\n{\"name\": \"chronic_pneumonia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.41%\", \"meaning\": \"Chronic pneumonia in the anamnesis\", \"association\": \"HF 33.3% (n=9) if yes vs 23.2% if no (p=0.471)\"},\n{\"name\": \"pulmonary_tuberculosis\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.41%\", \"meaning\": \"Pulmonary tuberculosis in the anamnesis\", \"association\": \"HF 22.7% (n=22) if yes vs 23.2% if no (p=0.957)\"},\n{\"name\": \"systolic_bp_emergency_team\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"63.29%\", \"meaning\": \"Systolic blood pressure recorded by the Emergency Cardiology Team (mmHg)\", \"association\": \"mean 142.05 with HF vs 135.66 without (p=0.060)\"},\n{\"name\": \"diastolic_bp_emergency_team\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"63.29%\", \"meaning\": \"Diastolic blood pressure recorded by the Emergency Cardiology Team (mmHg)\", \"association\": \"mean 83.77 with HF vs 80.82 without (p=0.083)\"},\n{\"name\": \"systolic_bp_icu\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"15.71%\", \"meaning\": \"Systolic blood pressure recorded in the ICU (mmHg)\", \"association\": \"mean 138.27 with HF vs 133.55 without (p=0.018)\"},\n{\"name\": \"diastolic_bp_icu\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"15.71%\", \"meaning\": \"Diastolic blood pressure recorded in the ICU (mmHg)\", \"association\": \"mean 84.56 with HF vs 82.24 without (p=0.033)\"},\n{\"name\": \"pulmonary_edema_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.71%\", \"meaning\": \"Pulmonary edema at the time of admission to the ICU\", \"association\": \"HF 24.5% if yes vs 23.1% if no (p=0.734)\"},\n{\"name\": \"cardiogenic_shock_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.88%\", \"meaning\": \"Cardiogenic shock at the time of admission to the ICU\", \"association\": \"HF 2.2% if yes vs 23.8% if no (p<0.001)\"},\n{\"name\": \"atrial_fibrillation_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.82%\", \"meaning\": \"Paroxysms of atrial fibrillation at admission to ICU or pre-hospital stage\", \"association\": \"HF 36.8% if yes vs 22.1% if no (p<0.001)\"},\n{\"name\": \"supraventricular_tachycardia_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.71%\", \"meaning\": \"Paroxysms of supraventricular tachycardia at admission to ICU or pre-hospital stage\", \"association\": \"HF 12.5% (n=8) if yes vs 23.3% if no (p=0.472)\"},\n{\"name\": \"ventricular_tachycardia_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.71%\", \"meaning\": \"Paroxysms of ventricular tachycardia at admission to ICU or pre-hospital stage\", \"association\": \"HF 37.5% (n=8) if yes vs 23.2% if no (p=0.338)\"},\n{\"name\": \"ventricular_fibrillation_at_admission\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.71%\", \"meaning\": \"Ventricular fibrillation at admission to ICU or pre-hospital stage\", \"association\": \"HF 13.3% (n=15) if yes vs 23.3% if no (p=0.362)\"},\n{\"name\": \"anterior_mi\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"4.88%\", \"meaning\": \"Presence of an anterior myocardial infarction (left ventricular; ECG changes in leads V1-V4). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\", \"association\": \"HF by code: 0: 22.6%, 1: 17.9%, 2: 23.1%, 3: 29.4%, 4: 27.6% (p=0.013)\"},\n{\"name\": \"lateral_mi\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"4.71%\", \"meaning\": \"Presence of a lateral myocardial infarction (left ventricular; ECG changes in leads V5, V6, I, AVL). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\", \"association\": \"HF by code: 0: 20.8%, 1: 22.1%, 2: 37.1%, 3: 38.9%, 4: 21.6% (p<0.001)\"},\n{\"name\": \"inferior_mi\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"4.71%\", \"meaning\": \"Presence of an inferior myocardial infarction (left ventricular; ECG changes in leads III, AVF, II). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\", \"association\": \"HF by code: 0: 23.1%, 1: 21.0%, 2: 25.7%, 3: 27.3%, 4: 21.6% (p=0.636)\"},\n{\"name\": \"posterior_mi\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"4.24%\", \"meaning\": \"Presence of a posterior myocardial infarction (left ventricular; ECG changes in V7-V9, reciprocal changes in V1-V3). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\", \"association\": \"HF by code: 0: 23.4%, 1: 23.6%, 2: 21.2%, 3: 20.0%, 4: 21.4% (n=14) (p=0.984)\"},\n{\"name\": \"right_ventricular_mi\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.06%\", \"meaning\": \"Presence of a right ventricular myocardial infarction\", \"association\": \"HF 26.0% if yes vs 23.1% if no (p=0.633)\"},\n{\"name\": \"ecg_rhythm_sinus_normal\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: sinus, heart rate 60-90\", \"association\": \"HF 21.4% if yes vs 27.2% if no (p=0.011)\"},\n{\"name\": \"ecg_rhythm_atrial_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: atrial fibrillation\", \"association\": \"HF 40.0% if yes vs 22.2% if no (p<0.001)\"},\n{\"name\": \"ecg_rhythm_atrial\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: atrial\", \"association\": \"HF 8.7% (n=23) if yes vs 23.5% if no (p=0.095)\"},\n{\"name\": \"ecg_rhythm_idioventricular\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: idioventricular\", \"association\": \"HF 100.0% (n=1) if yes vs 23.3% if no (p=0.070)\"},\n{\"name\": \"ecg_rhythm_sinus_tachycardia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: sinus with heart rate above 90 (tachycardia)\", \"association\": \"HF 25.5% if yes vs 22.7% if no (p=0.271)\"},\n{\"name\": \"ecg_rhythm_sinus_bradycardia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"8.94%\", \"meaning\": \"ECG rhythm at admission: sinus with heart rate below 60 (bradycardia)\", \"association\": \"HF 19.6% if yes vs 23.4% if no (p=0.541)\"},\n{\"name\": \"ecg_premature_atrial_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Premature atrial contractions on ECG at admission\", \"association\": \"HF 27.6% if yes vs 22.8% if no (p=0.394)\"},\n{\"name\": \"ecg_frequent_premature_atrial_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Frequent premature atrial contractions on ECG at admission\", \"association\": \"HF 0.0% (n=8) if yes vs 23.1% if no (p=0.122)\"},\n{\"name\": \"ecg_premature_ventricular_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Premature ventricular contractions on ECG at admission\", \"association\": \"HF 26.5% if yes vs 22.4% if no (p=0.202)\"},\n{\"name\": \"ecg_frequent_premature_ventricular_contractions\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Frequent premature ventricular contractions on ECG at admission\", \"association\": \"HF 23.2% if yes vs 23.0% if no (p=0.964)\"},\n{\"name\": \"ecg_paroxysmal_atrial_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Paroxysms of atrial fibrillation on ECG at admission\", \"association\": \"HF 31.4% if yes vs 22.6% if no (p=0.085)\"},\n{\"name\": \"ecg_persistent_atrial_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Persistent form of atrial fibrillation on ECG at admission\", \"association\": \"HF 53.1% if yes vs 22.3% if no (p<0.001)\"},\n{\"name\": \"ecg_supraventricular_tachycardia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Paroxysms of supraventricular tachycardia on ECG at admission\", \"association\": \"HF 0.0% (n=4) if yes vs 23.0% if no (p=0.274)\"},\n{\"name\": \"ecg_ventricular_tachycardia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Paroxysms of ventricular tachycardia on ECG at admission\", \"association\": \"HF 50.0% (n=2) if yes vs 22.9% if no (p=0.363)\"},\n{\"name\": \"ecg_ventricular_fibrillation\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Ventricular fibrillation on ECG at admission\", \"association\": \"HF 0.0% (n=2) if yes vs 23.0% if no (p=0.440)\"},\n{\"name\": \"ecg_sinoatrial_block\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Sinoatrial block on ECG at admission\", \"association\": \"HF 0.0% (n=2) if yes vs 22.9% if no (p=0.441)\"},\n{\"name\": \"ecg_av_block_1st_degree\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"First-degree AV block on ECG at admission\", \"association\": \"HF 25.0% if yes vs 22.9% if no (p=0.775)\"},\n{\"name\": \"ecg_av_block_2nd_degree_mobitz_1\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Type 1 second-degree AV block (Mobitz I / Wenckebach) on ECG at admission\", \"association\": \"HF 40.0% (n=5) if yes vs 22.8% if no (p=0.362)\"},\n{\"name\": \"ecg_av_block_2nd_degree_mobitz_2\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Type 2 second-degree AV block (Mobitz II / Hay) on ECG at admission\", \"association\": \"HF 0.0% (n=2) if yes vs 22.9% if no (p=0.441)\"},\n{\"name\": \"ecg_av_block_3rd_degree\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Third-degree AV block on ECG at admission\", \"association\": \"HF 29.6% (n=27) if yes vs 22.8% if no (p=0.401)\"},\n{\"name\": \"ecg_lbbb_anterior_branch\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"LBBB (anterior branch) on ECG at admission\", \"association\": \"HF 24.5% if yes vs 22.8% if no (p=0.690)\"},\n{\"name\": \"ecg_lbbb_posterior_branch\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"LBBB (posterior branch) on ECG at admission\", \"association\": \"HF 28.6% (n=7) if yes vs 22.9% if no (p=0.721)\"},\n{\"name\": \"ecg_incomplete_lbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Incomplete LBBB on ECG at admission\", \"association\": \"HF 40.0% (n=10) if yes vs 22.8% if no (p=0.197)\"},\n{\"name\": \"ecg_complete_lbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Complete LBBB on ECG at admission\", \"association\": \"HF 23.5% if yes vs 22.9% if no (p=0.930)\"},\n{\"name\": \"ecg_incomplete_rbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Incomplete RBBB on ECG at admission\", \"association\": \"HF 17.9% (n=28) if yes vs 23.0% if no (p=0.522)\"},\n{\"name\": \"ecg_complete_rbbb\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"6.76%\", \"meaning\": \"Complete RBBB on ECG at admission\", \"association\": \"HF 24.4% if yes vs 22.8% if no (p=0.754)\"},\n{\"name\": \"fibrinolysis_celiasum_750k_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Celiasum 750k IU\", \"association\": \"HF 15.4% (n=13) if yes vs 23.1% if no (p=0.509)\"},\n{\"name\": \"fibrinolysis_celiasum_1m_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Celiasum 1m IU\", \"association\": \"HF 18.8% (n=16) if yes vs 23.1% if no (p=0.680)\"},\n{\"name\": \"fibrinolysis_celiasum_3m_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Celiasum 3m IU\", \"association\": \"HF 17.6% if yes vs 23.3% if no (p=0.278)\"},\n{\"name\": \"fibrinolysis_streptase\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Streptase\", \"association\": \"HF 25.0% (n=4) if yes vs 23.1% if no (p=0.927)\"},\n{\"name\": \"fibrinolysis_celiasum_500k_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Celiasum 500k IU\", \"association\": \"HF 33.3% (n=9) if yes vs 23.0% if no (p=0.464)\"},\n{\"name\": \"fibrinolysis_celiasum_250k_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Celiasum 250k IU\", \"association\": \"HF 0.0% (n=6) if yes vs 23.2% if no (p=0.179)\"},\n{\"name\": \"fibrinolysis_streptodecase_1_5m_iu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Fibrinolytic therapy by Streptodecase 1.5m IU\", \"association\": \"HF 0.0% (n=2) if yes vs 23.1% if no (p=0.438)\"},\n{\"name\": \"hypokalemia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"21.71%\", \"meaning\": \"Hypokalemia (serum potassium < 4 mmol/L)\", \"association\": \"HF 24.3% if yes vs 23.6% if no (p=0.751)\"},\n{\"name\": \"serum_potassium\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"21.82%\", \"meaning\": \"Serum potassium content (mmol/L)\", \"association\": \"mean 4.16 with HF vs 4.20 without (p=0.367)\"},\n{\"name\": \"hypernatremia\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"22.06%\", \"meaning\": \"Increase of sodium in serum (more than 150 mmol/L)\", \"association\": \"HF 26.7% if yes vs 23.7% if no (p=0.707)\"},\n{\"name\": \"serum_sodium\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"22.06%\", \"meaning\": \"Serum sodium content (mmol/L)\", \"association\": \"mean 136.69 with HF vs 136.51 without (p=0.662)\"},\n{\"name\": \"serum_alt\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"16.71%\", \"meaning\": \"Serum AlAT (ALT) content (IU/L)\", \"association\": \"mean 0.52 with HF vs 0.47 without (p=0.055)\"},\n{\"name\": \"serum_ast\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"16.76%\", \"meaning\": \"Serum AsAT (AST) content (IU/L)\", \"association\": \"mean 0.28 with HF vs 0.26 without (p=0.236)\"},\n{\"name\": \"serum_cpk\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"99.76%\", \"meaning\": \"Serum CPK (creatine phosphokinase) content (IU/L)\", \"association\": \"too little data to compare\"},\n{\"name\": \"white_blood_cell_count\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"7.35%\", \"meaning\": \"White blood cell count (10^9/L)\", \"association\": \"mean 8.75 with HF vs 8.79 without (p=0.859)\"},\n{\"name\": \"esr\", \"type\": \"real\", \"known_at\": \"admission\", \"missing\": \"11.94%\", \"meaning\": \"ESR (erythrocyte sedimentation rate) (mm/h)\", \"association\": \"mean 14.29 with HF vs 13.19 without (p=0.106)\"},\n{\"name\": \"time_to_hospital\", \"type\": \"ordinal\", \"known_at\": \"admission\", \"missing\": \"7.41%\", \"meaning\": \"Time elapsed from the beginning of the attack of coronary heart disease to the hospital. Codes: 1=less than 2 hours; 2=2-4 hours; 3=4-6 hours; 4=6-8 hours; 5=8-12 hours; 6=12-24 hours; 7=more than 1 day; 8=more than 2 days; 9=more than 3 days\", \"association\": \"HF by code: 1: 20.2%, 2: 25.0%, 3: 28.6%, 4: 29.9%, 5: 19.6%, 6: 17.2%, 7: 26.2%, 8: 21.8%, 9: 21.6% (p=0.171)\"},\n{\"name\": \"pain_relapse_day_1\", \"type\": \"ordinal\", \"known_at\": \"end of day 1\", \"missing\": \"0.94%\", \"meaning\": \"Relapse of the pain in the first hours of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\", \"association\": \"HF by code: 0: 21.8%, 1: 29.2%, 2: 26.9%, 3: 15.4% (n=26) (p=0.032)\"},\n{\"name\": \"pain_relapse_day_2\", \"type\": \"ordinal\", \"known_at\": \"end of day 2\", \"missing\": \"6.35%\", \"meaning\": \"Relapse of the pain in the second day of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\", \"association\": \"HF by code: 0: 24.0%, 1: 27.1%, 2: 38.6%, 3: 0.0% (n=1) (p=0.125)\"},\n{\"name\": \"pain_relapse_day_3\", \"type\": \"ordinal\", \"known_at\": \"end of day 3\", \"missing\": \"7.53%\", \"meaning\": \"Relapse of the pain in the third day of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\", \"association\": \"HF by code: 0: 24.0%, 1: 36.0%, 2: 53.3% (n=15), 3: 0.0% (n=2) (p=0.004)\"},\n{\"name\": \"opioids_emergency_team\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"38.65%\", \"meaning\": \"Use of opioid drugs by the Emergency Cardiology Team\", \"association\": \"HF 24.6% if yes vs 21.6% if no (p=0.269)\"},\n{\"name\": \"nsaids_emergency_team\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"40.35%\", \"meaning\": \"Use of NSAIDs by the Emergency Cardiology Team\", \"association\": \"HF 25.7% if yes vs 18.5% if no (p=0.013)\"},\n{\"name\": \"lidocaine_emergency_team\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"39.82%\", \"meaning\": \"Use of lidocaine by the Emergency Cardiology Team\", \"association\": \"HF 26.3% if yes vs 22.2% if no (p=0.134)\"},\n{\"name\": \"iv_nitrates_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.53%\", \"meaning\": \"Use of liquid (intravenous) nitrates in the ICU\", \"association\": \"HF 26.2% if yes vs 22.9% if no (p=0.316)\"},\n{\"name\": \"opioids_icu_day_1\", \"type\": \"ordinal\", \"known_at\": \"end of day 1\", \"missing\": \"0.29%\", \"meaning\": \"Use of opioid drugs in the ICU in the first hours of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\", \"association\": \"HF by code: 0: 21.8%, 1: 24.9%, 2: 28.8%, 3: 25.7%, 4: 36.4% (n=11) (p=0.240)\"},\n{\"name\": \"opioids_icu_day_2\", \"type\": \"ordinal\", \"known_at\": \"end of day 2\", \"missing\": \"6.35%\", \"meaning\": \"Use of opioid drugs in the ICU in the second day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\", \"association\": \"HF by code: 0: 23.7%, 1: 32.2%, 2: 56.7%, 3: 0.0% (n=1) (p<0.001)\"},\n{\"name\": \"opioids_icu_day_3\", \"type\": \"ordinal\", \"known_at\": \"end of day 3\", \"missing\": \"7.71%\", \"meaning\": \"Use of opioid drugs in the ICU in the third day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times\", \"association\": \"HF by code: 0: 23.9%, 1: 48.3%, 2: 50.0% (n=16) (p<0.001)\"},\n{\"name\": \"nsaids_icu_day_1\", \"type\": \"ordinal\", \"known_at\": \"end of day 1\", \"missing\": \"0.59%\", \"meaning\": \"Use of NSAIDs in the ICU in the first hours of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\", \"association\": \"HF by code: 0: 21.5%, 1: 28.2%, 2: 26.4%, 3: 11.8% (n=17), 4: 85.7% (n=7) (p<0.001)\"},\n{\"name\": \"nsaids_icu_day_2\", \"type\": \"ordinal\", \"known_at\": \"end of day 2\", \"missing\": \"6.47%\", \"meaning\": \"Use of NSAIDs in the ICU in the second day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times\", \"association\": \"HF by code: 0: 24.2%, 1: 29.5%, 2: 31.6%, 3: 66.7% (n=3) (p=0.162)\"},\n{\"name\": \"nsaids_icu_day_3\", \"type\": \"ordinal\", \"known_at\": \"end of day 3\", \"missing\": \"7.71%\", \"meaning\": \"Use of NSAIDs in the ICU in the third day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice\", \"association\": \"HF by code: 0: 24.6%, 1: 29.8%, 2: 36.8% (p=0.162)\"},\n{\"name\": \"lidocaine_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.59%\", \"meaning\": \"Use of lidocaine in the ICU\", \"association\": \"HF 25.3% if yes vs 22.5% if no (p=0.234)\"},\n{\"name\": \"beta_blockers_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.65%\", \"meaning\": \"Use of beta-blockers in the ICU\", \"association\": \"HF 19.1% if yes vs 23.9% if no (p=0.114)\"},\n{\"name\": \"calcium_channel_blockers_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.76%\", \"meaning\": \"Use of calcium channel blockers in the ICU\", \"association\": \"HF 24.9% if yes vs 20.3% if no (p=0.035)\"},\n{\"name\": \"heparin_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.00%\", \"meaning\": \"Use of anticoagulants (heparin) in the ICU\", \"association\": \"HF 22.1% if yes vs 26.5% if no (p=0.057)\"},\n{\"name\": \"aspirin_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"1.00%\", \"meaning\": \"Use of acetylsalicylic acid in the ICU\", \"association\": \"HF 23.8% if yes vs 22.3% if no (p=0.518)\"},\n{\"name\": \"ticlopidine_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.94%\", \"meaning\": \"Use of Ticlid (ticlopidine) in the ICU\", \"association\": \"HF 13.3% if yes vs 23.6% if no (p=0.189)\"},\n{\"name\": \"pentoxifylline_icu\", \"type\": \"binary\", \"known_at\": \"admission\", \"missing\": \"0.94%\", \"meaning\": \"Use of Trental (pentoxifylline) in the ICU\", \"association\": \"HF 26.1% if yes vs 22.7% if no (p=0.187)\"}\n];\n\nconst input = String(query || '').trim();\nif (!input) return 'Give a variable name or a keyword, for example \"diabetes\" or \"potassium\".';\n\nconst wanted = input.toLowerCase().replace(/[_-]+/g, ' ');\nconst words = wanted.split(/\\s+/).filter(Boolean);\nconst exact = PROFILE.filter(p => p.name.replace(/_/g, ' ') === wanted);\nconst hits = exact.length ? exact : PROFILE.filter(p => {\n  const text = (p.name.replace(/_/g, ' ') + ' ' + p.meaning).toLowerCase();\n  return words.every(w => text.includes(w));\n});\n\nif (!hits.length) return `No variable matches \"${input}\" in our dataset. Try a shorter keyword. If it still finds nothing, the dataset does not have it.`;\n\nconst shown = hits.slice(0, 8);\nconst header = hits.length > shown.length ? `${hits.length} variables match; showing the first ${shown.length}:` : `${hits.length} variable(s) match:`;\nreturn header + '\\n' + shown.map(p => `${p.name} | ${p.type} | known at ${p.known_at} | ${p.missing} missing | ${p.meaning} | ${p.association}`).join('\\n');"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        96
+      ],
+      "id": "7205e4bb-6ff3-4f67-a43a-a3ca8004a904",
+      "name": "lookup_variable"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "=<style>\nbody { font-family: -apple-system, \"Segoe UI\", Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 16px; line-height: 1.55; color: #1f2933; }\nh1 { border-bottom: 3px solid #1f6feb; padding-bottom: 6px; }\nh2 { margin-top: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; color: #0b3d91; }\nh3, h4 { color: #0b3d91; }\ncode { font-family: Menlo, Consolas, monospace; font-weight: bold; font-size: 0.88em; background: #eef2f7; padding: 1px 5px; border-radius: 4px; }\ntable { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.9em; }\nth { background: #0b3d91; color: #ffffff; text-align: left; }\nth, td { border: 1px solid #d0d7de; padding: 6px 10px; vertical-align: top; }\ntr:nth-child(even) td { background: #f6f8fa; }\na { color: #1f6feb; }\nhr { border: none; border-top: 1px solid #d0d7de; margin: 2em 0; }\n@media print { body { margin: 0; max-width: none; } tr { page-break-inside: avoid; } th, tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\n</style>\n\n# Heart failure after MI: literature and data report\n\n- **Question:** {{ $('When chat message received').first().json.chatInput }}\n- **Date:** {{ $now.toFormat('yyyy-MM-dd') }}\n\n## Part 1. What the literature says (Literature Scout)\n\n{{ $('Literature Scout').first().json.output }}\n\n## Part 2. What our data can support (Data Analyst)\n\n{{ $json.output }}",
+        "destinationKey": "data",
+        "options": {
+          "completeHTMLDocument": true,
+          "simplifiedAutoLink": true,
+          "tables": true
+        }
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -128
+      ],
+      "id": "f2d6f481-c6b0-4617-a97b-8f7fe948c8ff",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "data",
+        "options": {
+          "fileName": "report.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        -128
+      ],
+      "id": "df431030-82fb-428f-bf1d-3d5fcea0fac2",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "message": "=\u2705 **Workflow completed.** The team has finished. The Data Analyst's answer is below.\n\n**To save the report as a PDF:** open the **Convert to File** node in the Logs panel, click **Download**, open the file in your browser, and choose File \u2192 Print \u2192 Save as PDF.\n\n---\n\n{{ $('Data Analyst').first().json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1392,
+        -128
+      ],
+      "id": "9f5542ff-c67d-4da7-8501-05dc639825a5",
+      "name": "Report ready"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Literature Scout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Literature Scout": {
+      "main": [
+        [
+          {
+            "node": "Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Review": {
+      "main": [
+        [
+          {
+            "node": "Human Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Decision": {
+      "main": [
+        [
+          {
+            "node": "Data Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Analyst": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Report ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lookup_variable": {
+      "ai_tool": [
+        [
+          {
+            "node": "Data Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PubMed MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Literature Scout",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

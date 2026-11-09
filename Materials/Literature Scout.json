@@ -1,0 +1,280 @@
+{
+  "name": "Literature Scout",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "dbc7e50c-7fdf-4400-b230-97cc2c9c67cb",
+      "name": "When chat message received",
+      "webhookId": "a435aaf8-fef9-4986-8375-cbd303739075"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are the Literature Scout on a research team studying heart failure after acute myocardial infarction (MI).\n\nTools:\n- search_pubmed: searches PubMed and returns PubMed IDs (PMIDs).\n- fetch_abstracts: given comma-separated PMIDs, returns titles and abstracts.\n\nHow to work:\n1. Turn the request into a short PubMed query, for example: \"Myocardial Infarction\"[MeSH] AND \"Heart Failure\"[MeSH].\n2. Search, then fetch abstracts for the 3-5 most relevant PMIDs. If a search returns nothing, broaden the query and try again.\n3. Summarize each paper in 2-3 sentences: design, population, main finding.\n4. Cite every claim with its PMID. Never cite a PMID you did not retrieve with a tool.\n5. End with one line headed \"What this means for our team\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "bdf78511-57a2-4ef8-8efb-7adf28a8b39d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search PubMed for biomedical articles. Input a PubMed query string and the number of days to look back. Returns a JSON list of PubMed IDs (PMIDs)",
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "db",
+              "value": "pubmed"
+            },
+            {
+              "name": "retmode",
+              "value": "json"
+            },
+            {
+              "name": "retmax",
+              "value": "10"
+            },
+            {
+              "name": "sort",
+              "value": "relevance"
+            },
+            {
+              "name": "datetype",
+              "value": "pdat"
+            },
+            {
+              "name": "term",
+              "value": "={{ $fromAI('term', 'PubMed query string; MeSH terms allowed', 'string') }} "
+            },
+            {
+              "name": "reldate",
+              "value": "={{ $fromAI('days', 'Only include papers published in the last N days', 'number', 365) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        416,
+        112
+      ],
+      "id": "27837fde-93d0-4e19-844b-4dc8ed29237f",
+      "name": "search_pubmed"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -64,
+        192
+      ],
+      "id": "f65f440b-c94b-4156-b9c1-9af0e460c748",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        176
+      ],
+      "id": "9694964b-0ab7-4519-a986-410c804e1dfb",
+      "name": "Azure AI Foundry Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "3bw4oWnumkgOsjHO",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetch titles and abstracts for comma-separated PubMed IDs returned by search_pubmed",
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "db",
+              "value": "pubmed"
+            },
+            {
+              "name": "rettype",
+              "value": "abstract"
+            },
+            {
+              "name": "retmode",
+              "value": "text"
+            },
+            {
+              "name": "id",
+              "value": "={{ $fromAI('pmids', 'Comma-separated PubMed IDs', 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        208
+      ],
+      "id": "f3830d26-d2d2-410c-a2a1-25d045ae843a",
+      "name": "fetch_abstracts"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}.",
+        "options": {
+          "simplifiedAutoLink": true,
+          "completeHTMLDocument": true,
+          "tables": true
+        }
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -32
+      ],
+      "id": "a131b2c7-f506-48c0-ad6d-bdc9a053cb0a",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "data",
+        "options": {
+          "fileName": "literature_scout_report.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        -32
+      ],
+      "id": "f4b7ba4a-4d52-4fbc-8a04-e00ff6ec25bb",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_pubmed": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure AI Foundry Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_abstracts": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bff86168-02f0-43f9-bff1-dc4a3c0851a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49ee8cd0127df863044c73db12c65a9cfcce35e2d2b7c3eb82ec694ecd5f09c2"
+  },
+  "nodeGroups": [],
+  "id": "IP8xzUnnKgbMk3wu",
+  "tags": []
+}

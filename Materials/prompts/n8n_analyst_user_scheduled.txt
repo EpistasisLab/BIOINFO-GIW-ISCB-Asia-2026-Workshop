@@ -1,0 +1,4 @@
+Research question: Which patients develop heart failure after acute MI, and how could we predict it?
+
+Literature Scout findings (approved by the PI):
+{{ $('Literature Scout').first().json.output }}

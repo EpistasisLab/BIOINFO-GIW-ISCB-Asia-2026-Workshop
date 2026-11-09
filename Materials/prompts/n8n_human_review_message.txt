@@ -1,0 +1,12 @@
+The Literature Scout has finished. Please review its findings before the Data Analyst starts.
+
+**Check that:**
+- the papers are relevant to heart failure after MI,
+- every PMID comes with a title that you can find on PubMed,
+- the risk factors the Scout lists are the ones we want to test in our own data.
+
+Choose **Approve** to continue to the Data Analyst, or **Decline** to stop here.
+
+---
+
+{{ $('Literature Scout').first().json.output }}
