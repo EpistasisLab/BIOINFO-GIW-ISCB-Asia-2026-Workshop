@@ -32,8 +32,8 @@ For session 2a, follow the "Get n8n running" section inside `01_gui_agent_builde
 | `01_…`, `02_…`, `03_…` `.ipynb` | The three notebooks |
 | `mi_tools.py` | Shared code for sessions 2b and 2c: the four analysis tools, model setup, run and cost helpers. Open it to see how the tools work |
 | `Data/` | The dataset (`mi_heart_failure.csv`) and its data dictionary (`dict_heart_failure.json`) |
-| `materials/` | Prompts and templates used by the n8n workflow, and `runs/` with saved agent runs (for `REPLAY = True`) |
-| `workflows/` | Importable n8n workflows |
+| `Materials/` | Prompts and templates used by the n8n workflow, and `runs/` with saved agent runs (for `REPLAY = True`) |
+| `Workflows/` | Importable n8n workflows |
 | `Instructions/` | How to get API keys (Anthropic, OpenAI, Microsoft Foundry) |
 | `.env_example` | Template for your private `.env` |
 
