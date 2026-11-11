@@ -20,8 +20,14 @@ hr { border: none; border-top: 1px solid #d0d7de; margin: 2em 0; }
 
 ## Part 1. What the literature says (Literature Scout)
 
-{{ $('Literature Scout').first().json.output }}
+{{ $('Logistic Regression').first().json.scout_markdown }}
 
 ## Part 2. What our data can support (Data Analyst)
 
-{{ $json.output }}
+{{ $('Logistic Regression').first().json.report }}
+
+## Part 3. A fixed prediction model (no language model)
+
+The Data Analyst chose the predictors; fixed code then fitted a logistic regression and scored it. The Data Analyst did not see any of these results.
+
+{{ $('Logistic Regression').first().json.model_markdown }}

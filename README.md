@@ -14,7 +14,7 @@ Hands-on notebooks for the **BIOINFO GIW ISCB-Asia 2026 workshop**.
 ## Session 2 notebooks
 | Session | Notebook | What you build | Needs |
 |---|---|---|---|
-| **2a** | `01_gui_agent_builders.ipynb` | A research team in **n8n** (no code): a Literature Scout, a human review step, a Data Analyst, and a report. Also the same team using an existing **MCP** server | n8n (Docker or the n8n Cloud trial) and an LLM key |
+| **2a** | `01_gui_agent_builders.ipynb` | A research team in **n8n** (no code): a Literature Scout, a human review step, a Data Analyst, a fixed logistic-regression step (plain code, no LLM) scored on a held-out test set, and a report. Also the same team using an existing **MCP** server | n8n (Docker or the n8n Cloud trial), an LLM key, and the dataset uploaded to an n8n data table |
 | **2b** | `02_agent_design_patterns.ipynb` | One Data Analyst agent in Python with three control patterns: **ReAct**, **Plan-and-Execute / SRPA**, and **Reflection**. Compares them on quality and cost | Python and an LLM key |
 | **2c** | `03_multi_agent_langgraph.ipynb` | A **multi-agent workflow in LangGraph**: Scout, Analyst and Reviewer, wired as a straight line and then with a review loop | Python and an LLM key (plus internet for the PubMed MCP server) |
 
@@ -34,12 +34,13 @@ Do them in order. Each one reuses the data and the question from the one before.
 
 **No key, or the network is slow?** Set `REPLAY = True` in the first code cell of notebook 2 or 3. The notebook then shows the runs saved in `materials/runs/` and makes no model calls. (A live run of a notebook costs from a few cents to well under a dollar at list prices, and each run prints an estimate.)
 
-For session 2a, follow the "Get n8n running" section inside `01_gui_agent_builders.ipynb`. You can also import the ready-made workflows in `workflows/` into n8n (`mi_research_team.json` builds the tools by hand, `mi_research_team_mcp.json` uses the PubMed MCP server). You then add your own model credential.
+For session 2a, follow the "Get n8n running" section inside `01_gui_agent_builders.ipynb`. You can also import the ready-made workflows in `workflows/` into n8n (`mi_research_team.json` builds the tools by hand, `mi_research_team_mcp.json` uses the PubMed MCP server). You then add your own model credential and select your `mi_heart_failure` data table (upload `Data/mi_heart_failure.csv` once; the steps are in the notebook).
 
 ## What is in this folder
 | Path | What it is |
 |---|---|
 | `01_…`, `02_…`, `03_…` `.ipynb` | The three notebooks |
+| `fixed_logistic.py` | The fixed train/test split and logistic-regression recipe used in session 2a, in Python. It reproduces the numbers of the n8n code step |
 | `mi_tools.py` | Shared code for sessions 2b and 2c: the four analysis tools, model setup, run and cost helpers. Open it to see how the tools work |
 | `Data/` | The dataset (`mi_heart_failure.csv`) and its data dictionary (`dict_heart_failure.json`) |
 | `Materials/` | Prompts and templates used by the n8n workflow, and `runs/` with saved agent runs (for `REPLAY = True`) |

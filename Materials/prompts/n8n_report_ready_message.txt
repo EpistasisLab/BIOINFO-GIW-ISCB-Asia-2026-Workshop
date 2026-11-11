@@ -1,7 +1,13 @@
-✅ **Workflow completed.** The team has finished. The Data Analyst's answer is below.
+✅ **Workflow completed.** The team has finished. The Data Analyst's report and the fixed model's results are below.
 
 **To save the report as a PDF:** open the **Convert to File** node in the Logs panel, click **Download**, open the file in your browser, and choose File → Print → Save as PDF.
 
 ---
 
-{{ $('Data Analyst').first().json.output }}
+{{ $('Logistic Regression').first().json.report }}
+
+---
+
+**Fixed model (Part 3 of the report)**
+
+{{ $('Logistic Regression').first().json.model_markdown }}
