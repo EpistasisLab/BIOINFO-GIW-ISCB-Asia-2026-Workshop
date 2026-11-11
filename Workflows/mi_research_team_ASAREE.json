@@ -1,0 +1,1483 @@
+{
+  "name": "MI Research Team + Logistic Regression (PubMed MCP)",
+  "description": "Literature Scout -> Data Analyst -> fixed logistic regression, on heart failure after acute MI. Port of the n8n 'MI Research Team' workflow without the human-approval step. The Scout searches PubMed and lists risk factors; the Data Analyst maps them onto a precomputed TRAINING-SET profile (11 wired print-only scripts) and chooses up to 20 admission-time features; a Tool Step then runs fixed code (a line-for-line port of the n8n Logistic Regression node: L2 logistic regression, C=1, median imputation, standardization, 5-fold CV with fixed fold assignment) on the Analyst's list, and ASAREE scores it on the held-out test set. The train/test split is the n8n one (no randomness; 1,193/277 train, 507/117 test), registered as a manual split made by make_mi_split.py. Factors: model (claude-sonnet-5 vs claude-haiku-5-5) x effort (medium vs xhigh) x the Data Analyst's system prompt (literature-led vs data-led). Before running: wire the mi_heart_failure Dataset into the Data Analyst and the PubMed MCP Tool into the Literature Scout.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "llm-shared",
+        "type": "model_azure_foundry",
+        "position": {
+          "x": 420,
+          "y": 560
+        },
+        "data": {
+          "label": "Azure Foundry (shared)",
+          "config": {
+            "model": "claude-sonnet-5",
+            "effort": null,
+            "provider": "azure_foundry",
+            "max_tokens": 128000,
+            "temperature": null,
+            "resolved_capabilities": null,
+            "resolved_capabilities_origin": null
+          },
+          "factor_bindings": {
+            "config.model": "Azure Foundry:Model",
+            "config.effort": "Azure Foundry:Effort"
+          }
+        }
+      },
+      {
+        "id": "agent-scout",
+        "type": "agent",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "label": "Literature Scout",
+          "config": {
+            "goal": "Research question: What are the main risk factors for heart failure after acute MI, and which of them could we use to predict it in our patients?\n\nSearch PubMed and report what the literature says, following your instructions.",
+            "prompt": "",
+            "description": "Searches PubMed through the PubMed MCP server, summarizes up to 5 papers with PMID citations, and lists the risk factors they report.",
+            "system_prompt": "You are the Literature Scout on a research team studying heart failure after acute myocardial infarction (MI).\n\nTools (from a PubMed server):\n- pubmed_search_articles: searches PubMed and returns PubMed IDs (PMIDs). Useful inputs: query (PubMed syntax, MeSH terms allowed), maxResults, and sort. Do not pass dateRange unless the request names a time window.\n- pubmed_fetch_articles: given a list of PMIDs, returns titles, abstracts, journals, and more.\n\nHow to work:\n1. Turn the request into a short PubMed query, for example: \"Myocardial Infarction\"[MeSH] AND \"Heart Failure\"[MeSH].\n2. Search, then fetch the 5 most relevant PMIDs in one call (fewer only if fewer than 5 are relevant). If a search returns nothing, broaden the query and try again.\n3. Summarize each paper in 2-3 sentences under its own heading: design, population, main finding. Write your answer in Markdown.\n4. Cite every claim with its PMID. Never cite a PMID you did not retrieve with a tool.\n5. Add a section \"Risk factors reported\": one ### heading per risk factor the papers identify for heart failure after MI, with bullet points naming the supporting PMIDs. The Data Analyst checks each of these against our dataset, so name them plainly (for example \"diabetes\", \"Killip class\", \"atrial fibrillation\").\n6. Add one line headed \"What this means for our team\".\n7. End with a \"References\" list of every paper you fetched, one per line: title, journal, year, PMID, and the link https://pubmed.ncbi.nlm.nih.gov/<PMID>/\n\nFormatting: give each paper and each risk factor its own ### heading, and use bullet points under it. Do not use numbered lists anywhere in your answer.",
+            "output_contract": null,
+            "budget_limit_usd": 50,
+            "require_output_parser": true,
+            "max_run_duration_seconds": 3600
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "pattern-scout",
+        "type": "pattern_reason_act",
+        "position": {
+          "x": 0,
+          "y": -220
+        },
+        "data": {
+          "label": "",
+          "config": {
+            "max_iterations": 12,
+            "scratchpad_window": 10,
+            "include_scratchpad": true,
+            "observation_format": "raw"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "parser-scout",
+        "type": "output_parser",
+        "position": {
+          "x": 140,
+          "y": 200
+        },
+        "data": {
+          "label": "Literature Scout Output Parser",
+          "config": {
+            "enabled": true,
+            "output_contract": {
+              "name": "ScoutReport",
+              "fields": [
+                {
+                  "name": "pmids",
+                  "type": "array",
+                  "description": "every PMID fetched with pubmed_fetch_articles and cited in the answer, as strings"
+                },
+                {
+                  "name": "risk_factors",
+                  "type": "array",
+                  "description": "the risk factor names listed under 'Risk factors reported', as strings"
+                }
+              ]
+            }
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "agent-analyst",
+        "type": "agent",
+        "position": {
+          "x": 700,
+          "y": 0
+        },
+        "data": {
+          "label": "Data Analyst",
+          "config": {
+            "goal": "Research question: What are the main risk factors for heart failure after acute MI, and which of them could we use to predict it in our patients?\n\nLiterature Scout findings:\n{{previous}}\n\nCheck these findings against our training-set profile, choose the final features, and write your report, following your instructions.",
+            "prompt": "",
+            "description": "Maps the Scout's risk factors onto the training-set profile of our MI dataset, chooses up to 20 admission-time features for the fixed logistic regression, and writes the data report.",
+            "system_prompt": "You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team's research question and the Literature Scout's findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=<name>): prints part of a profile of the training set that was computed in advance. Each row gives a variable's type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\"variable_index\") first: it lists every variable and which profile script prints it.\n2. For each risk factor from the Literature Scout, find the variable(s) in the index that could stand for it and run the profile script(s) that print them. If several variables could stand for a risk factor, look at the candidates. If no variable fits, it is \"Not in our dataset\". Run as few scripts as you can.\n3. Quote numbers only from the scripts' output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission: the variables you looked up that match the literature's risk factors (or that you judge worth testing), known at admission, with at most 30% missing. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.",
+            "output_contract": null,
+            "budget_limit_usd": 50,
+            "require_output_parser": true,
+            "max_run_duration_seconds": 3600
+          },
+          "factor_bindings": {
+            "config.system_prompt": "Data Analyst:System prompt"
+          }
+        }
+      },
+      {
+        "id": "pattern-analyst",
+        "type": "pattern_reason_act",
+        "position": {
+          "x": 700,
+          "y": -220
+        },
+        "data": {
+          "label": "",
+          "config": {
+            "max_iterations": 25,
+            "scratchpad_window": 10,
+            "include_scratchpad": true,
+            "observation_format": "raw"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "parser-analyst",
+        "type": "output_parser",
+        "position": {
+          "x": 840,
+          "y": 200
+        },
+        "data": {
+          "label": "Data Analyst Output Parser",
+          "config": {
+            "enabled": true,
+            "output_contract": {
+              "name": "AnalystReport",
+              "fields": [
+                {
+                  "name": "features",
+                  "type": "array",
+                  "description": "the plain variable names on the answer's first line 'FEATURES: ...', in order, as strings, exactly as written (no backticks)"
+                },
+                {
+                  "name": "risk_factor_rows",
+                  "type": "array",
+                  "description": "one object per row of the 'Literature vs. our data' table: {risk_factor, our_variables, usable} where usable is Yes, Proxy, or Not in our dataset"
+                },
+                {
+                  "name": "usable_risk_factors",
+                  "type": "array",
+                  "description": "names of the Scout's risk factors marked Yes or Proxy"
+                },
+                {
+                  "name": "not_in_dataset",
+                  "type": "array",
+                  "description": "names of the Scout's risk factors marked Not in our dataset"
+                },
+                {
+                  "name": "predictive_questions",
+                  "type": "array",
+                  "description": "the predictive questions we can answer, one string each"
+                }
+              ]
+            }
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "tool-step-lr",
+        "type": "tool_step",
+        "position": {
+          "x": 1400,
+          "y": 0
+        },
+        "data": {
+          "label": "Logistic Regression (fixed code)",
+          "config": {
+            "tool_name": "run_model_script",
+            "arguments": {
+              "code": {
+                "source": "script_code"
+              },
+              "task_type": {
+                "value": "binary",
+                "source": "value"
+              },
+              "random_seed": {
+                "value": 42,
+                "source": "value"
+              },
+              "payload_json": {
+                "format": "json_string",
+                "source": "upstream_payload"
+              },
+              "workspace_id": {
+                "source": "workspace_id"
+              },
+              "positive_label": {
+                "value": "1",
+                "source": "value"
+              },
+              "selection_metric": {
+                "value": "roc_auc",
+                "source": "value"
+              }
+            },
+            "hash_checks": {
+              "code_sha256": "code",
+              "payload_sha256": "payload_json"
+            },
+            "timeout_seconds": 900
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-lr",
+        "type": "script",
+        "position": {
+          "x": 1300,
+          "y": 260
+        },
+        "data": {
+          "label": "Logistic regression (n8n port)",
+          "config": {
+            "code": "# ==================================================================\n# ASAREE fixed modeling script: logistic regression on the Data Analyst's features.\n# Python port of the n8n \"Logistic Regression\" code node -- same recipe, same numbers.\n# No language model is involved: the same feature list always gives the same result.\n#\n# Pre-bound by run_model_script: hp (the Data Analyst's Output-Parser payload),\n# X_train, y_train, np, pd. The test split is NEVER bound: this script defines\n# predict_proba(X) and chosen_threshold, and ASAREE scores the held-out test set itself.\n#\n# Recipe (unchanged from n8n):\n#   split       fixed, no randomness: patients sorted by patient_id; within cases and\n#               non-cases separately, positions 0-6 of every 10 are TRAIN, 7-9 TEST.\n#               That split is frozen in the registered dataset (manual split), so here\n#               we only check that the training part is the expected 1,193 / 277.\n#   features    the Analyst's list; drop names not in our dataset, *_day_N variables\n#               (known only after admission) and >30% missing in the training split.\n#   encoding    categorical -> 0/1 columns for each training level except the lowest.\n#   each fit    median imputation + standardization (learned on the fit rows only),\n#               L2-regularized logistic regression, C = 1, intercept not penalized,\n#               Newton's method.\n#   CV          5 folds inside the training set: the j-th case and the j-th non-case\n#               (in patient_id order) go to fold j mod 5.\n#   final       fit on the whole training set; ASAREE scores it once on the test set.\n# ==================================================================\nMETA = {  # predictor name -> type, for every feature in our dataset (from the n8n workflow)\n    \"age\": \"integer\",\n    \"sex\": \"binary\",\n    \"prior_mi_count\": \"ordinal\",\n    \"exertional_angina_history\": \"ordinal\",\n    \"angina_functional_class\": \"ordinal\",\n    \"recent_coronary_disease\": \"categorical\",\n    \"family_history_coronary_disease\": \"binary\",\n    \"hypertension_stage\": \"ordinal\",\n    \"symptomatic_hypertension\": \"binary\",\n    \"hypertension_duration\": \"ordinal\",\n    \"prior_heart_failure\": \"categorical\",\n    \"history_arrhythmia\": \"binary\",\n    \"history_premature_atrial_contractions\": \"binary\",\n    \"history_premature_ventricular_contractions\": \"binary\",\n    \"history_paroxysmal_atrial_fibrillation\": \"binary\",\n    \"history_persistent_atrial_fibrillation\": \"binary\",\n    \"history_ventricular_fibrillation\": \"binary\",\n    \"history_ventricular_tachycardia\": \"binary\",\n    \"history_av_block_1st_degree\": \"binary\",\n    \"history_av_block_3rd_degree\": \"binary\",\n    \"history_lbbb_anterior_branch\": \"binary\",\n    \"history_incomplete_lbbb\": \"binary\",\n    \"history_complete_lbbb\": \"binary\",\n    \"history_incomplete_rbbb\": \"binary\",\n    \"history_complete_rbbb\": \"binary\",\n    \"diabetes\": \"binary\",\n    \"obesity\": \"binary\",\n    \"thyrotoxicosis\": \"binary\",\n    \"chronic_bronchitis\": \"binary\",\n    \"obstructive_chronic_bronchitis\": \"binary\",\n    \"asthma\": \"binary\",\n    \"chronic_pneumonia\": \"binary\",\n    \"pulmonary_tuberculosis\": \"binary\",\n    \"systolic_bp_emergency_team\": \"real\",\n    \"diastolic_bp_emergency_team\": \"real\",\n    \"systolic_bp_icu\": \"real\",\n    \"diastolic_bp_icu\": \"real\",\n    \"pulmonary_edema_at_admission\": \"binary\",\n    \"cardiogenic_shock_at_admission\": \"binary\",\n    \"atrial_fibrillation_at_admission\": \"binary\",\n    \"supraventricular_tachycardia_at_admission\": \"binary\",\n    \"ventricular_tachycardia_at_admission\": \"binary\",\n    \"ventricular_fibrillation_at_admission\": \"binary\",\n    \"anterior_mi\": \"ordinal\",\n    \"lateral_mi\": \"ordinal\",\n    \"inferior_mi\": \"ordinal\",\n    \"posterior_mi\": \"ordinal\",\n    \"right_ventricular_mi\": \"binary\",\n    \"ecg_rhythm_sinus_normal\": \"binary\",\n    \"ecg_rhythm_atrial_fibrillation\": \"binary\",\n    \"ecg_rhythm_atrial\": \"binary\",\n    \"ecg_rhythm_idioventricular\": \"binary\",\n    \"ecg_rhythm_sinus_tachycardia\": \"binary\",\n    \"ecg_rhythm_sinus_bradycardia\": \"binary\",\n    \"ecg_premature_atrial_contractions\": \"binary\",\n    \"ecg_frequent_premature_atrial_contractions\": \"binary\",\n    \"ecg_premature_ventricular_contractions\": \"binary\",\n    \"ecg_frequent_premature_ventricular_contractions\": \"binary\",\n    \"ecg_paroxysmal_atrial_fibrillation\": \"binary\",\n    \"ecg_persistent_atrial_fibrillation\": \"binary\",\n    \"ecg_supraventricular_tachycardia\": \"binary\",\n    \"ecg_ventricular_tachycardia\": \"binary\",\n    \"ecg_ventricular_fibrillation\": \"binary\",\n    \"ecg_sinoatrial_block\": \"binary\",\n    \"ecg_av_block_1st_degree\": \"binary\",\n    \"ecg_av_block_2nd_degree_mobitz_1\": \"binary\",\n    \"ecg_av_block_2nd_degree_mobitz_2\": \"binary\",\n    \"ecg_av_block_3rd_degree\": \"binary\",\n    \"ecg_lbbb_anterior_branch\": \"binary\",\n    \"ecg_lbbb_posterior_branch\": \"binary\",\n    \"ecg_incomplete_lbbb\": \"binary\",\n    \"ecg_complete_lbbb\": \"binary\",\n    \"ecg_incomplete_rbbb\": \"binary\",\n    \"ecg_complete_rbbb\": \"binary\",\n    \"fibrinolysis_celiasum_750k_iu\": \"binary\",\n    \"fibrinolysis_celiasum_1m_iu\": \"binary\",\n    \"fibrinolysis_celiasum_3m_iu\": \"binary\",\n    \"fibrinolysis_streptase\": \"binary\",\n    \"fibrinolysis_celiasum_500k_iu\": \"binary\",\n    \"fibrinolysis_celiasum_250k_iu\": \"binary\",\n    \"fibrinolysis_streptodecase_1_5m_iu\": \"binary\",\n    \"hypokalemia\": \"binary\",\n    \"serum_potassium\": \"real\",\n    \"hypernatremia\": \"binary\",\n    \"serum_sodium\": \"real\",\n    \"serum_alt\": \"real\",\n    \"serum_ast\": \"real\",\n    \"serum_cpk\": \"real\",\n    \"white_blood_cell_count\": \"real\",\n    \"esr\": \"real\",\n    \"time_to_hospital\": \"ordinal\",\n    \"pain_relapse_day_1\": \"ordinal\",\n    \"pain_relapse_day_2\": \"ordinal\",\n    \"pain_relapse_day_3\": \"ordinal\",\n    \"opioids_emergency_team\": \"binary\",\n    \"nsaids_emergency_team\": \"binary\",\n    \"lidocaine_emergency_team\": \"binary\",\n    \"iv_nitrates_icu\": \"binary\",\n    \"opioids_icu_day_1\": \"ordinal\",\n    \"opioids_icu_day_2\": \"ordinal\",\n    \"opioids_icu_day_3\": \"ordinal\",\n    \"nsaids_icu_day_1\": \"ordinal\",\n    \"nsaids_icu_day_2\": \"ordinal\",\n    \"nsaids_icu_day_3\": \"ordinal\",\n    \"lidocaine_icu\": \"binary\",\n    \"beta_blockers_icu\": \"binary\",\n    \"calcium_channel_blockers_icu\": \"binary\",\n    \"heparin_icu\": \"binary\",\n    \"aspirin_icu\": \"binary\",\n    \"ticlopidine_icu\": \"binary\",\n    \"pentoxifylline_icu\": \"binary\",\n}\nOUTCOME, ID, C, FOLDS, MAX_MISSING_PCT = \"heart_failure\", \"patient_id\", 1.0, 5, 30\nEXPECTED_N_TRAIN, EXPECTED_EVENTS_TRAIN = 1193, 277\nimport re as _re\n\n# ---- 1. What the Data Analyst asked for (its Output Parser's `features` list)\n_raw = (hp or {}).get(\"features\") or []\nif isinstance(_raw, str):\n    _raw = _re.split(r\"[,;\\s]+\", _raw)\nrequested = []\nfor _n in _raw:\n    _n = _re.sub(r\"^[`'\\\"*_\\[\\]().]+|[`'\\\"*_\\[\\]().]+$\", \"\", str(_n).strip())\n    if _n:\n        requested.append(_n)\n\n# ---- 2. The training patients, in a fixed order (patient_id), with a data check\n_Xtr = X_train.copy()\n_Xtr[\"__y__\"] = np.asarray(y_train, dtype=float)\nif ID in _Xtr.columns:\n    _Xtr = _Xtr.sort_values(ID, kind=\"mergesort\")\n_Xtr = _Xtr.reset_index(drop=True)\n_y = _Xtr.pop(\"__y__\").to_numpy(dtype=float)\n_events = int((_y == 1).sum())\nif len(_y) != EXPECTED_N_TRAIN or _events != EXPECTED_EVENTS_TRAIN:\n    raise ValueError(\n        f\"The training split has {len(_y)} rows and {_events} heart failure cases; expected \"\n        f\"{EXPECTED_N_TRAIN} and {EXPECTED_EVENTS_TRAIN}. Register the dataset with the manual split \"\n        \"made by make_mi_split.py from mi_heart_failure.csv.\"\n    )\n\ndef _num(series):\n    return pd.to_numeric(series, errors=\"coerce\").to_numpy(dtype=float)\n\n# ---- 3. Which requested predictors can we use?\nused, dropped, _listed = [], [], set()\nfor name in requested:\n    if name in _listed:\n        continue\n    _listed.add(name)\n    reason = None\n    if name not in META:\n        reason = \"is the outcome\" if name == OUTCOME else \"not a predictor in our dataset\"\n    elif _re.search(r\"_day_\\d$\", name):\n        reason = \"known only after admission\"\n    elif name not in _Xtr.columns:\n        reason = \"not a column of the registered dataset\"\n    else:\n        missing = 100.0 * np.isnan(_num(_Xtr[name])).sum() / len(_Xtr)\n        if missing > MAX_MISSING_PCT:\n            reason = f\"{round(missing)}% missing in the training split\"\n    if reason:\n        dropped.append({\"name\": name, \"reason\": reason})\n    else:\n        used.append(name)\n\n# ---- 4. Predictors as numbers; categorical levels come from the training set\n_spec = []   # (column name, source variable, level or None)\nfor name in used:\n    if META[name] == \"categorical\":\n        levels = sorted(set(v for v in _num(_Xtr[name]) if not np.isnan(v)))[1:]\n        _spec += [(f\"{name}={int(l) if float(l).is_integer() else l}\", name, l) for l in levels]\n    else:\n        _spec.append((name, name, None))\np = len(_spec)\n\ndef _design(df):\n    cols = []\n    for _, var, level in _spec:\n        v = _num(df[var])\n        cols.append(v if level is None else np.where(np.isnan(v), np.nan, (v == level).astype(float)))\n    return np.column_stack(cols) if cols else np.zeros((len(df), 0))\n\n_Z = _design(_Xtr)\n\ndef _prepare(fit_rows):\n    \"\"\"Median imputation and standardization learned on fit_rows (population SD, 0 -> 1).\"\"\"\n    meds = np.array([np.nanmedian(fit_rows[:, j]) if (~np.isnan(fit_rows[:, j])).any() else np.nan for j in range(p)])\n    def fill(m):\n        return np.where(np.isnan(m), meds, m)\n    f = fill(fit_rows)\n    mu = f.mean(axis=0)\n    sd = f.std(axis=0)\n    sd[sd == 0] = 1.0\n    sd[np.isnan(sd)] = 1.0\n    return (lambda m: (fill(m) - mu) / sd), sd\n\n# ---- 5. L2-regularized logistic regression by Newton's method (intercept not penalized)\ndef _sigmoid(z):\n    return 1.0 / (1.0 + np.exp(-z))\n\ndef _fit(X, t):\n    lam = 1.0 / C\n    A = np.column_stack([np.ones(len(X)), X])\n    w = np.zeros(p + 1)\n    pen = np.ones(p + 1); pen[0] = 0.0\n    def objective(v):\n        z = A @ v\n        return float(np.sum(np.log1p(np.exp(-np.abs(z))) + np.maximum(z, 0) - t * z) + 0.5 * lam * np.sum(v[1:] ** 2))\n    for _ in range(100):\n        mu = _sigmoid(A @ w)\n        grad = A.T @ (mu - t) + lam * pen * w\n        H = (A * (mu * (1 - mu))[:, None]).T @ A + np.diag(lam * pen)\n        step = np.linalg.solve(H, grad)\n        scale, before = 1.0, objective(w)\n        while scale > 1e-8 and objective(w - scale * step) > before + 1e-12:\n            scale /= 2\n        w = w - scale * step\n        if np.max(np.abs(step * scale)) < 1e-10:\n            break\n    return w\n\ndef _predict(w, X):\n    return _sigmoid(w[0] + X @ w[1:])\n\n# ---- 6. Metrics: AUC (ties averaged), PR-AUC (average precision), Brier\ndef _auc(t, s):\n    order = np.argsort(s, kind=\"mergesort\"); rank = np.empty(len(s)); i = 0\n    while i < len(order):\n        j = i\n        while j + 1 < len(order) and s[order[j + 1]] == s[order[i]]:\n            j += 1\n        rank[order[i:j + 1]] = (i + j) / 2 + 1; i = j + 1\n    pos = t.sum(); neg = len(t) - pos\n    return float((rank[t == 1].sum() - pos * (pos + 1) / 2) / (pos * neg))\n\ndef _ap(t, s):\n    order = np.argsort(-s, kind=\"mergesort\"); pos = t.sum(); tp = fp = 0; ap = last = 0.0; i = 0\n    while i < len(order):\n        j = i\n        while j + 1 < len(order) and s[order[j + 1]] == s[order[i]]:\n            j += 1\n        k = order[i:j + 1]; tp += int(t[k].sum()); fp += int(len(k) - t[k].sum())\n        recall = tp / pos; ap += (recall - last) * (tp / (tp + fp)); last = recall; i = j + 1\n    return float(ap)\n\ndef _scores(t, s):\n    return {\"auc\": _auc(t, s), \"pr_auc\": _ap(t, s), \"brier\": float(np.mean((s - t) ** 2))}\n\nresult = {\n    \"features_requested\": requested, \"n_features_requested\": len(requested),\n    \"features_used\": used, \"n_features_used\": len(used),\n    \"features_dropped\": dropped, \"n_features_dropped\": len(dropped),\n    \"n_train\": int(len(_y)), \"events_train\": _events,\n}\n\nif not used:\n    # Nothing usable: no model is fitted. Score a no-skill model (training prevalence for\n    # everyone) so the run is still recorded, and flag it with model_fitted = 0.\n    _prev = float(_y.mean())\n    result.update({\"model_fitted\": 0, \"n_model_columns\": 0})\n    def predict_proba(X):\n        return np.full(len(X), _prev)\n    why = (\"none of the predictors the Data Analyst listed could be used\" if requested\n           else \"the Data Analyst's output has no features\")\n    print(f\"- Patients: {len(_y)} train.\\n- No model was fitted: {why}; the test set is scored with a no-skill model.\")\n    if dropped:\n        print(\"- Dropped: \" + \"; \".join(f\"{d['name']} ({d['reason']})\" for d in dropped) + \".\")\nelse:\n    # ---- 7. 5-fold cross-validation inside the training set\n    _fold = np.zeros(len(_y), dtype=int); _counter = {0.0: 0, 1.0: 0}\n    for a, yv in enumerate(_y):\n        _fold[a] = _counter[yv] % FOLDS; _counter[yv] += 1\n    cv = []\n    for k in range(FOLDS):\n        fit_m, out_m = _fold != k, _fold == k\n        tf, _ = _prepare(_Z[fit_m])\n        w = _fit(tf(_Z[fit_m]), _y[fit_m])\n        cv.append(_scores(_y[out_m], _predict(w, tf(_Z[out_m]))))\n\n    # ---- 8. Final fit on the whole training set (ASAREE scores it on the test set)\n    _transform, _sd = _prepare(_Z)\n    _w = _fit(_transform(_Z), _y)\n    train_auc = _auc(_y, _predict(_w, _transform(_Z)))\n    odds = sorted(\n        [{\"feature\": c[0], \"std_coef\": float(_w[j + 1]), \"odds_ratio\": float(np.exp(_w[j + 1] / _sd[j]))}\n         for j, c in enumerate(_spec)],\n        key=lambda o: -abs(o[\"std_coef\"]))\n\n    def predict_proba(X):\n        return _predict(_w, _transform(_design(X)))\n\n    col = lambda key: np.array([s[key] for s in cv])\n    result.update({\n        \"model_fitted\": 1, \"n_model_columns\": p, \"events_per_column\": _events / p,\n        \"cv_auc_mean\": float(col(\"auc\").mean()), \"cv_auc_sd\": float(col(\"auc\").std()),\n        \"cv_pr_auc_mean\": float(col(\"pr_auc\").mean()), \"cv_pr_auc_sd\": float(col(\"pr_auc\").std()),\n        \"cv_brier_mean\": float(col(\"brier\").mean()), \"cv_brier_sd\": float(col(\"brier\").std()),\n        \"train_auc\": train_auc, \"intercept\": float(_w[0]), \"odds_ratios\": odds,\n    })\n\n    # ---- 9. Part 3 of the report (test-set numbers are in this step's test_metrics)\n    f3 = lambda v: f\"{v:.3f}\"\n    print(f\"- Patients: {len(_y):,} train ({_events} with heart failure); the held-out test set is scored by ASAREE (see test_metrics).\")\n    print(f\"- Predictors used ({len(used)}): \" + \", \".join(f\"`{n}`\" for n in used) + \".\")\n    if dropped:\n        print(\"- Dropped: \" + \"; \".join(f\"`{d['name']}` ({d['reason']})\" for d in dropped) + \".\")\n    print(f\"- Model columns: {p} ({_events / p:.1f} training events per column).\")\n    print(f\"- 5-fold cross-validation in the training set: AUC {f3(result['cv_auc_mean'])} ± {f3(result['cv_auc_sd'])}, \"\n          f\"PR-AUC {f3(result['cv_pr_auc_mean'])}, Brier {f3(result['cv_brier_mean'])}.\")\n    print(f\"- Training-set AUC (on the data the model learned from): {f3(train_auc)}.\")\n    print(\"\\n| Predictor | Odds ratio per unit | Standardized coefficient |\\n|---|---|---|\")\n    for o in odds[:8]:\n        print(f\"| `{o['feature']}` | {o['odds_ratio']:.2f} | {o['std_coef']:.2f} |\")\n\nchosen_threshold = 0.5\n",
+            "name": "logistic_regression_fixed",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "tool-model-lr",
+        "type": "mcp_tool",
+        "position": {
+          "x": 1500,
+          "y": 260
+        },
+        "data": {
+          "label": "Model (run_model_script)",
+          "config": {
+            "enabled": true,
+            "server_id": "562f7d2c-cd8a-4224-90d3-592b5eb8f669",
+            "tool_names": [
+              "run_model_script"
+            ],
+            "server_name": "asaree-sklearn-model"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-variable-index",
+        "type": "script",
+        "position": {
+          "x": 560,
+          "y": 360
+        },
+        "data": {
+          "label": "variable_index",
+          "config": {
+            "code": "# variable_index: lists every variable and which profile script prints it. Prints only.\nprint(\"Variable index for our MI dataset (training set: 1,193 patients, 277 with heart_failure). Each entry is a profile script name, then the variables it prints. A risk factor with no variable here is not in our dataset.\\nprofile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\\n  age, sex, prior_mi_count, exertional_angina_history, angina_functional_class, recent_coronary_disease, family_history_coronary_disease, hypertension_stage, symptomatic_hypertension, hypertension_duration, prior_heart_failure\\nprofile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\\n  history_arrhythmia, history_premature_atrial_contractions, history_premature_ventricular_contractions, history_paroxysmal_atrial_fibrillation, history_persistent_atrial_fibrillation, history_ventricular_fibrillation, history_ventricular_tachycardia, history_av_block_1st_degree, history_av_block_3rd_degree, history_lbbb_anterior_branch, history_incomplete_lbbb, history_complete_lbbb, history_incomplete_rbbb, history_complete_rbbb\\nprofile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\\n  diabetes, obesity, thyrotoxicosis, chronic_bronchitis, obstructive_chronic_bronchitis, asthma, chronic_pneumonia, pulmonary_tuberculosis\\nprofile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\\n  systolic_bp_emergency_team, diastolic_bp_emergency_team, systolic_bp_icu, diastolic_bp_icu, pulmonary_edema_at_admission, cardiogenic_shock_at_admission, atrial_fibrillation_at_admission, supraventricular_tachycardia_at_admission, ventricular_tachycardia_at_admission, ventricular_fibrillation_at_admission\\nprofile_infarct_location: Infarct location on ECG\\n  anterior_mi, lateral_mi, inferior_mi, posterior_mi, right_ventricular_mi\\nprofile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\\n  ecg_rhythm_sinus_normal, ecg_rhythm_atrial_fibrillation, ecg_rhythm_atrial, ecg_rhythm_idioventricular, ecg_rhythm_sinus_tachycardia, ecg_rhythm_sinus_bradycardia, ecg_premature_atrial_contractions, ecg_frequent_premature_atrial_contractions, ecg_premature_ventricular_contractions, ecg_frequent_premature_ventricular_contractions, ecg_paroxysmal_atrial_fibrillation, ecg_persistent_atrial_fibrillation, ecg_supraventricular_tachycardia, ecg_ventricular_tachycardia, ecg_ventricular_fibrillation\\nprofile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\\n  ecg_sinoatrial_block, ecg_av_block_1st_degree, ecg_av_block_2nd_degree_mobitz_1, ecg_av_block_2nd_degree_mobitz_2, ecg_av_block_3rd_degree, ecg_lbbb_anterior_branch, ecg_lbbb_posterior_branch, ecg_incomplete_lbbb, ecg_complete_lbbb, ecg_incomplete_rbbb, ecg_complete_rbbb\\nprofile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\\n  hypokalemia, serum_potassium, hypernatremia, serum_sodium, serum_alt, serum_ast, serum_cpk, white_blood_cell_count, esr\\nprofile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\\n  fibrinolysis_celiasum_750k_iu, fibrinolysis_celiasum_1m_iu, fibrinolysis_celiasum_3m_iu, fibrinolysis_streptase, fibrinolysis_celiasum_500k_iu, fibrinolysis_celiasum_250k_iu, fibrinolysis_streptodecase_1_5m_iu, time_to_hospital, opioids_emergency_team, nsaids_emergency_team, lidocaine_emergency_team, iv_nitrates_icu\\nprofile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\\n  pain_relapse_day_1, pain_relapse_day_2, pain_relapse_day_3, opioids_icu_day_1, opioids_icu_day_2, opioids_icu_day_3, nsaids_icu_day_1, nsaids_icu_day_2, nsaids_icu_day_3, lidocaine_icu, beta_blockers_icu, calcium_channel_blockers_icu, heparin_icu, aspirin_icu, ticlopidine_icu, pentoxifylline_icu\")\n",
+            "name": "variable_index",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-demographics-cardiac-history",
+        "type": "script",
+        "position": {
+          "x": 730,
+          "y": 360
+        },
+        "data": {
+          "label": "profile_demographics_cardiac_history",
+          "config": {
+            "code": "# profile_demographics_cardiac_history: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"age\",\n\"integer\",\n\"admission\",\n\"0.50%\",\n\"Age of patient (years)\",\n\"mean 65.03 with HF vs 60.64 without (p<0.001)\"\n],\n[\n\"sex\",\n\"binary\",\n\"admission\",\n\"0.00%\",\n\"Sex\",\n\"HF 19.2% if male vs 30.4% if female (p<0.001)\"\n],\n[\n\"prior_mi_count\",\n\"ordinal\",\n\"admission\",\n\"0.34%\",\n\"Quantity of myocardial infarctions in the anamnesis. Codes: 0=zero; 1=one; 2=two; 3=three or more\",\n\"HF by code: 0: 23.5%, 1: 21.4%, 2: 27.0%, 3: 23.2% (p=0.694)\"\n],\n[\n\"exertional_angina_history\",\n\"ordinal\",\n\"admission\",\n\"6.54%\",\n\"Exertional angina pectoris in the anamnesis. Codes: 0=never; 1=during the last year; 2=one year ago; 3=two years ago; 4=three years ago; 5=4-5 years ago; 6=more than 5 years ago\",\n\"HF by code: 0: 23.4%, 1: 30.9%, 2: 16.1%, 3: 25.3%, 4: 11.3%, 5: 22.4%, 6: 27.0% (p=0.067)\"\n],\n[\n\"angina_functional_class\",\n\"ordinal\",\n\"admission\",\n\"4.69%\",\n\"Functional class of angina pectoris in the last year. Codes: 0=no angina; 1=I FC; 2=II FC; 3=III FC; 4=IV FC\",\n\"HF by code: 0: 23.2%, 1: 17.9% (n=28), 2: 24.8%, 3: 20.5%, 4: 12.5% (n=8) (p=0.783)\"\n],\n[\n\"recent_coronary_disease\",\n\"categorical\",\n\"admission\",\n\"3.10%\",\n\"Coronary heart disease in recent weeks/days before admission. Codes: 0=none; 1=exertional angina; 2=unstable angina\",\n\"HF by code: 0: 22.4%, 1: 25.5%, 2: 23.1% (p=0.606)\"\n],\n[\n\"family_history_coronary_disease\",\n\"binary\",\n\"admission\",\n\"95.73%\",\n\"Heredity on coronary heart disease\",\n\"HF 5.0% (n=20) if burdened vs 16.1% if not burdened (p=0.228)\"\n],\n[\n\"hypertension_stage\",\n\"ordinal\",\n\"admission\",\n\"0.59%\",\n\"Presence of essential hypertension. Codes: 0=none; 1=Stage 1; 2=Stage 2; 3=Stage 3\",\n\"HF by code: 0: 22.2%, 1: 20.0% (n=10), 2: 23.0%, 3: 28.3% (p=0.534)\"\n],\n[\n\"symptomatic_hypertension\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Symptomatic hypertension\",\n\"HF 21.6% if yes vs 23.3% if no (p=0.811)\"\n],\n[\n\"hypertension_duration\",\n\"ordinal\",\n\"admission\",\n\"14.42%\",\n\"Duration of arterial hypertension. Codes: 0=none; 1=one year; 2=two years; 3=three years; 4=four years; 5=five years; 6=6-10 years; 7=more than 10 years\",\n\"HF by code: 0: 22.0%, 1: 19.7%, 2: 17.5%, 3: 18.9%, 4: 21.1% (n=19), 5: 27.5%, 6: 22.2%, 7: 26.0% (p=0.801)\"\n],\n[\n\"prior_heart_failure\",\n\"categorical\",\n\"admission\",\n\"3.44%\",\n\"Presence of chronic heart failure in the anamnesis. Codes: 0=no chronic heart failure; 1=stage I; 2=stage II (right ventricular systolic dysfunction); 3=stage II (left ventricular systolic dysfunction); 4=stage IIB (left and right ventricular systolic dysfunction)\",\n\"HF by code: 0: 18.4%, 1: 90.4%, 2: 28.6% (n=21), 3: 36.4% (n=22), 4: 30.8% (n=13) (p<0.001)\"\n]\n]\nprint(\"Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure) -- 11 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_demographics_cardiac_history",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-arrhythmia-history",
+        "type": "script",
+        "position": {
+          "x": 900,
+          "y": 360
+        },
+        "data": {
+          "label": "profile_arrhythmia_history",
+          "config": {
+            "code": "# profile_arrhythmia_history: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"history_arrhythmia\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Observing of arrhythmia in the anamnesis\",\n\"HF 27.3% if yes vs 23.3% if no (p=0.590)\"\n],\n[\n\"history_premature_atrial_contractions\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Premature atrial contractions in the anamnesis\",\n\"HF 66.7% (n=3) if yes vs 23.3% if no (p=0.076)\"\n],\n[\n\"history_premature_ventricular_contractions\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Premature ventricular contractions in the anamnesis\",\n\"HF 44.4% (n=9) if yes vs 23.2% if no (p=0.134)\"\n],\n[\n\"history_paroxysmal_atrial_fibrillation\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Paroxysms of atrial fibrillation in the anamnesis\",\n\"HF 30.4% (n=23) if yes vs 23.2% if no (p=0.418)\"\n],\n[\n\"history_persistent_atrial_fibrillation\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Persistent form of atrial fibrillation in the anamnesis\",\n\"HF 50.0% (n=24) if yes vs 22.8% if no (p=0.002)\"\n],\n[\n\"history_ventricular_fibrillation\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Ventricular fibrillation in the anamnesis\",\n\"HF 100.0% (n=1) if yes vs 23.3% if no (p=0.070)\"\n],\n[\n\"history_ventricular_tachycardia\",\n\"binary\",\n\"admission\",\n\"1.34%\",\n\"Ventricular paroxysmal tachycardia in the anamnesis\",\n\"HF 0.0% (n=2) if yes vs 23.4% if no (p=0.434)\"\n],\n[\n\"history_av_block_1st_degree\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"First-degree AV block in the anamnesis\",\n\"HF 100.0% (n=1) if yes vs 23.3% if no (p=0.070)\"\n],\n[\n\"history_av_block_3rd_degree\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"Third-degree AV block in the anamnesis\",\n\"HF 0.0% (n=2) if yes vs 23.4% if no (p=0.434)\"\n],\n[\n\"history_lbbb_anterior_branch\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"LBBB (anterior branch) in the anamnesis\",\n\"HF 30.0% (n=10) if yes vs 23.4% if no (p=0.621)\"\n],\n[\n\"history_incomplete_lbbb\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"Incomplete LBBB in the anamnesis\",\n\"HF 0.0% (n=1) if yes vs 23.4% if no (p=0.580)\"\n],\n[\n\"history_complete_lbbb\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"Complete LBBB in the anamnesis\",\n\"HF 0.0% (n=5) if yes vs 23.5% if no (p=0.215)\"\n],\n[\n\"history_incomplete_rbbb\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"Incomplete RBBB in the anamnesis\",\n\"HF 100.0% (n=2) if yes vs 23.3% if no (p=0.010)\"\n],\n[\n\"history_complete_rbbb\",\n\"binary\",\n\"admission\",\n\"1.17%\",\n\"Complete RBBB in the anamnesis\",\n\"HF 50.0% (n=2) if yes vs 23.4% if no (p=0.374)\"\n]\n]\nprint(\"Arrhythmia and conduction-block history (before this admission) -- 14 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_arrhythmia_history",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-comorbidities",
+        "type": "script",
+        "position": {
+          "x": 1070,
+          "y": 360
+        },
+        "data": {
+          "label": "profile_comorbidities",
+          "config": {
+            "code": "# profile_comorbidities: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"diabetes\",\n\"binary\",\n\"admission\",\n\"0.67%\",\n\"Diabetes mellitus in the anamnesis\",\n\"HF 39.7% if yes vs 20.9% if no (p<0.001)\"\n],\n[\n\"obesity\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Obesity in the anamnesis\",\n\"HF 32.1% (n=28) if yes vs 23.1% if no (p=0.266)\"\n],\n[\n\"thyrotoxicosis\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Thyrotoxicosis in the anamnesis\",\n\"HF 9.1% (n=11) if yes vs 23.5% if no (p=0.261)\"\n],\n[\n\"chronic_bronchitis\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Chronic bronchitis in the anamnesis\",\n\"HF 44.7% if yes vs 21.4% if no (p<0.001)\"\n],\n[\n\"obstructive_chronic_bronchitis\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Obstructive chronic bronchitis in the anamnesis\",\n\"HF 22.8% if yes vs 23.3% if no (p=0.920)\"\n],\n[\n\"asthma\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Bronchial asthma in the anamnesis\",\n\"HF 26.1% (n=23) if yes vs 23.2% if no (p=0.745)\"\n],\n[\n\"chronic_pneumonia\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Chronic pneumonia in the anamnesis\",\n\"HF 37.5% (n=8) if yes vs 23.2% if no (p=0.338)\"\n],\n[\n\"pulmonary_tuberculosis\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Pulmonary tuberculosis in the anamnesis\",\n\"HF 25.0% (n=16) if yes vs 23.2% if no (p=0.868)\"\n]\n]\nprint(\"Comorbidities (diabetes, obesity, thyroid, chronic lung disease) -- 8 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_comorbidities",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-admission-vitals-complications",
+        "type": "script",
+        "position": {
+          "x": 560,
+          "y": 470
+        },
+        "data": {
+          "label": "profile_admission_vitals_complications",
+          "config": {
+            "code": "# profile_admission_vitals_complications: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"systolic_bp_emergency_team\",\n\"real\",\n\"admission\",\n\"62.70%\",\n\"Systolic blood pressure recorded by the Emergency Cardiology Team (mmHg)\",\n\"mean 139.26 with HF vs 135.76 without (p=0.358)\"\n],\n[\n\"diastolic_bp_emergency_team\",\n\"real\",\n\"admission\",\n\"62.70%\",\n\"Diastolic blood pressure recorded by the Emergency Cardiology Team (mmHg)\",\n\"mean 82.50 with HF vs 81.01 without (p=0.445)\"\n],\n[\n\"systolic_bp_icu\",\n\"real\",\n\"admission\",\n\"15.51%\",\n\"Systolic blood pressure recorded in the ICU (mmHg)\",\n\"mean 138.95 with HF vs 133.15 without (p=0.011)\"\n],\n[\n\"diastolic_bp_icu\",\n\"real\",\n\"admission\",\n\"15.51%\",\n\"Diastolic blood pressure recorded in the ICU (mmHg)\",\n\"mean 84.42 with HF vs 82.15 without (p=0.074)\"\n],\n[\n\"pulmonary_edema_at_admission\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Pulmonary edema at the time of admission to the ICU\",\n\"HF 22.1% if yes vs 23.3% if no (p=0.820)\"\n],\n[\n\"cardiogenic_shock_at_admission\",\n\"binary\",\n\"admission\",\n\"0.84%\",\n\"Cardiogenic shock at the time of admission to the ICU\",\n\"HF 0.0% if yes vs 23.8% if no (p=0.002)\"\n],\n[\n\"atrial_fibrillation_at_admission\",\n\"binary\",\n\"admission\",\n\"0.67%\",\n\"Paroxysms of atrial fibrillation at admission to ICU or pre-hospital stage\",\n\"HF 41.7% if yes vs 21.7% if no (p<0.001)\"\n],\n[\n\"supraventricular_tachycardia_at_admission\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Paroxysms of supraventricular tachycardia at admission to ICU or pre-hospital stage\",\n\"HF 16.7% (n=6) if yes vs 23.2% if no (p=0.704)\"\n],\n[\n\"ventricular_tachycardia_at_admission\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Paroxysms of ventricular tachycardia at admission to ICU or pre-hospital stage\",\n\"HF 40.0% (n=5) if yes vs 23.1% if no (p=0.372)\"\n],\n[\n\"ventricular_fibrillation_at_admission\",\n\"binary\",\n\"admission\",\n\"0.59%\",\n\"Ventricular fibrillation at admission to ICU or pre-hospital stage\",\n\"HF 0.0% (n=12) if yes vs 23.4% if no (p=0.056)\"\n]\n]\nprint(\"Blood pressure and complications at admission (edema, shock, arrhythmias) -- 10 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_admission_vitals_complications",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-infarct-location",
+        "type": "script",
+        "position": {
+          "x": 730,
+          "y": 470
+        },
+        "data": {
+          "label": "profile_infarct_location",
+          "config": {
+            "code": "# profile_infarct_location: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"anterior_mi\",\n\"ordinal\",\n\"admission\",\n\"4.86%\",\n\"Presence of an anterior myocardial infarction (left ventricular; ECG changes in leads V1-V4). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\",\n\"HF by code: 0: 22.9%, 1: 18.4%, 2: 26.5%, 3: 28.0% (n=25), 4: 27.2% (p=0.123)\"\n],\n[\n\"lateral_mi\",\n\"ordinal\",\n\"admission\",\n\"4.61%\",\n\"Presence of a lateral myocardial infarction (left ventricular; ECG changes in leads V5, V6, I, AVL). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\",\n\"HF by code: 0: 21.3%, 1: 22.5%, 2: 33.3%, 3: 42.6%, 4: 20.0% (n=25) (p=0.003)\"\n],\n[\n\"inferior_mi\",\n\"ordinal\",\n\"admission\",\n\"4.36%\",\n\"Presence of an inferior myocardial infarction (left ventricular; ECG changes in leads III, AVF, II). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\",\n\"HF by code: 0: 23.4%, 1: 19.7%, 2: 25.6%, 3: 28.2%, 4: 23.1% (p=0.661)\"\n],\n[\n\"posterior_mi\",\n\"ordinal\",\n\"admission\",\n\"3.86%\",\n\"Presence of a posterior myocardial infarction (left ventricular; ECG changes in V7-V9, reciprocal changes in V1-V3). Codes: 0=no infarct; 1=QRS has no changes; 2=QRS is like QR-complex; 3=QRS is like Qr-complex; 4=QRS is like QS-complex\",\n\"HF by code: 0: 23.3%, 1: 24.8%, 2: 27.8%, 3: 17.4% (n=23), 4: 14.3% (n=7) (p=0.863)\"\n],\n[\n\"right_ventricular_mi\",\n\"binary\",\n\"admission\",\n\"0.08%\",\n\"Presence of a right ventricular myocardial infarction\",\n\"HF 22.6% if yes vs 23.3% if no (p=0.930)\"\n]\n]\nprint(\"Infarct location on ECG -- 5 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_infarct_location",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-ecg-rhythm-admission",
+        "type": "script",
+        "position": {
+          "x": 900,
+          "y": 470
+        },
+        "data": {
+          "label": "profile_ecg_rhythm_admission",
+          "config": {
+            "code": "# profile_ecg_rhythm_admission: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"ecg_rhythm_sinus_normal\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: sinus, heart rate 60-90\",\n\"HF 20.7% if yes vs 28.2% if no (p=0.005)\"\n],\n[\n\"ecg_rhythm_atrial_fibrillation\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: atrial fibrillation\",\n\"HF 46.5% if yes vs 21.6% if no (p<0.001)\"\n],\n[\n\"ecg_rhythm_atrial\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: atrial\",\n\"HF 11.1% (n=18) if yes vs 23.5% if no (p=0.218)\"\n],\n[\n\"ecg_rhythm_idioventricular\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: idioventricular\",\n\"no variation in the training set (every patient has 0)\"\n],\n[\n\"ecg_rhythm_sinus_tachycardia\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: sinus with heart rate above 90 (tachycardia)\",\n\"HF 24.8% if yes vs 22.8% if no (p=0.514)\"\n],\n[\n\"ecg_rhythm_sinus_bradycardia\",\n\"binary\",\n\"admission\",\n\"9.22%\",\n\"ECG rhythm at admission: sinus with heart rate below 60 (bradycardia)\",\n\"HF 24.2% if yes vs 23.2% if no (p=0.893)\"\n],\n[\n\"ecg_premature_atrial_contractions\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Premature atrial contractions on ECG at admission\",\n\"HF 27.5% if yes vs 22.7% if no (p=0.475)\"\n],\n[\n\"ecg_frequent_premature_atrial_contractions\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Frequent premature atrial contractions on ECG at admission\",\n\"HF 0.0% (n=6) if yes vs 23.0% if no (p=0.181)\"\n],\n[\n\"ecg_premature_ventricular_contractions\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Premature ventricular contractions on ECG at admission\",\n\"HF 23.6% if yes vs 22.7% if no (p=0.826)\"\n],\n[\n\"ecg_frequent_premature_ventricular_contractions\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Frequent premature ventricular contractions on ECG at admission\",\n\"HF 21.6% if yes vs 22.9% if no (p=0.825)\"\n],\n[\n\"ecg_paroxysmal_atrial_fibrillation\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Paroxysms of atrial fibrillation on ECG at admission\",\n\"HF 41.3% if yes vs 22.0% if no (p=0.002)\"\n],\n[\n\"ecg_persistent_atrial_fibrillation\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Persistent form of atrial fibrillation on ECG at admission\",\n\"HF 52.0% (n=25) if yes vs 22.2% if no (p<0.001)\"\n],\n[\n\"ecg_supraventricular_tachycardia\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Paroxysms of supraventricular tachycardia on ECG at admission\",\n\"HF 0.0% (n=2) if yes vs 22.9% if no (p=0.441)\"\n],\n[\n\"ecg_ventricular_tachycardia\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Paroxysms of ventricular tachycardia on ECG at admission\",\n\"HF 100.0% (n=1) if yes vs 22.8% if no (p=0.066)\"\n],\n[\n\"ecg_ventricular_fibrillation\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Ventricular fibrillation on ECG at admission\",\n\"HF 0.0% (n=1) if yes vs 22.9% if no (p=0.586)\"\n]\n]\nprint(\"ECG rhythm and ectopy at admission -- 15 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_ecg_rhythm_admission",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-ecg-conduction-admission",
+        "type": "script",
+        "position": {
+          "x": 1070,
+          "y": 470
+        },
+        "data": {
+          "label": "profile_ecg_conduction_admission",
+          "config": {
+            "code": "# profile_ecg_conduction_admission: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"ecg_sinoatrial_block\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Sinoatrial block on ECG at admission\",\n\"HF 0.0% (n=2) if yes vs 22.9% if no (p=0.441)\"\n],\n[\n\"ecg_av_block_1st_degree\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"First-degree AV block on ECG at admission\",\n\"HF 26.1% (n=23) if yes vs 22.8% if no (p=0.708)\"\n],\n[\n\"ecg_av_block_2nd_degree_mobitz_1\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Type 1 second-degree AV block (Mobitz I / Wenckebach) on ECG at admission\",\n\"HF 33.3% (n=3) if yes vs 22.8% if no (p=0.665)\"\n],\n[\n\"ecg_av_block_2nd_degree_mobitz_2\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Type 2 second-degree AV block (Mobitz II / Hay) on ECG at admission\",\n\"no variation in the training set (every patient has 0)\"\n],\n[\n\"ecg_av_block_3rd_degree\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Third-degree AV block on ECG at admission\",\n\"HF 25.0% (n=20) if yes vs 22.8% if no (p=0.817)\"\n],\n[\n\"ecg_lbbb_anterior_branch\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"LBBB (anterior branch) on ECG at admission\",\n\"HF 24.7% if yes vs 22.7% if no (p=0.680)\"\n],\n[\n\"ecg_lbbb_posterior_branch\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"LBBB (posterior branch) on ECG at admission\",\n\"HF 20.0% (n=5) if yes vs 22.9% if no (p=0.879)\"\n],\n[\n\"ecg_incomplete_lbbb\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Incomplete LBBB on ECG at admission\",\n\"HF 50.0% (n=6) if yes vs 22.7% if no (p=0.112)\"\n],\n[\n\"ecg_complete_lbbb\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Complete LBBB on ECG at admission\",\n\"HF 17.4% (n=23) if yes vs 23.0% if no (p=0.529)\"\n],\n[\n\"ecg_incomplete_rbbb\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Incomplete RBBB on ECG at admission\",\n\"HF 18.2% (n=22) if yes vs 22.9% if no (p=0.599)\"\n],\n[\n\"ecg_complete_rbbb\",\n\"binary\",\n\"admission\",\n\"6.79%\",\n\"Complete RBBB on ECG at admission\",\n\"HF 28.0% if yes vs 22.6% if no (p=0.374)\"\n]\n]\nprint(\"ECG conduction blocks at admission (AV, SA, bundle-branch) -- 11 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_ecg_conduction_admission",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-labs",
+        "type": "script",
+        "position": {
+          "x": 560,
+          "y": 580
+        },
+        "data": {
+          "label": "profile_labs",
+          "config": {
+            "code": "# profile_labs: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"hypokalemia\",\n\"binary\",\n\"admission\",\n\"20.96%\",\n\"Hypokalemia (serum potassium < 4 mmol/L)\",\n\"HF 25.3% if yes vs 23.1% if no (p=0.433)\"\n],\n[\n\"serum_potassium\",\n\"real\",\n\"admission\",\n\"21.12%\",\n\"Serum potassium content (mmol/L)\",\n\"mean 4.17 with HF vs 4.23 without (p=0.296)\"\n],\n[\n\"hypernatremia\",\n\"binary\",\n\"admission\",\n\"21.29%\",\n\"Increase of sodium in serum (more than 150 mmol/L)\",\n\"HF 22.7% (n=22) if yes vs 23.8% if no (p=0.909)\"\n],\n[\n\"serum_sodium\",\n\"real\",\n\"admission\",\n\"21.29%\",\n\"Serum sodium content (mmol/L)\",\n\"mean 136.35 with HF vs 136.71 without (p=0.461)\"\n],\n[\n\"serum_alt\",\n\"real\",\n\"admission\",\n\"16.18%\",\n\"Serum AlAT (ALT) content (IU/L)\",\n\"mean 0.51 with HF vs 0.46 without (p=0.082)\"\n],\n[\n\"serum_ast\",\n\"real\",\n\"admission\",\n\"16.26%\",\n\"Serum AsAT (AST) content (IU/L)\",\n\"mean 0.27 with HF vs 0.26 without (p=0.518)\"\n],\n[\n\"serum_cpk\",\n\"real\",\n\"admission\",\n\"99.75%\",\n\"Serum CPK (creatine phosphokinase) content (IU/L)\",\n\"too little data to compare\"\n],\n[\n\"white_blood_cell_count\",\n\"real\",\n\"admission\",\n\"7.12%\",\n\"White blood cell count (10^9/L)\",\n\"mean 8.57 with HF vs 8.85 without (p=0.260)\"\n],\n[\n\"esr\",\n\"real\",\n\"admission\",\n\"11.40%\",\n\"ESR (erythrocyte sedimentation rate) (mm/h)\",\n\"mean 14.37 with HF vs 13.08 without (p=0.105)\"\n]\n]\nprint(\"Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR) -- 9 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_labs",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-prehospital-and-fibrinolysis",
+        "type": "script",
+        "position": {
+          "x": 730,
+          "y": 580
+        },
+        "data": {
+          "label": "profile_prehospital_and_fibrinolysis",
+          "config": {
+            "code": "# profile_prehospital_and_fibrinolysis: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"fibrinolysis_celiasum_750k_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Celiasum 750k IU\",\n\"HF 0.0% (n=8) if yes vs 23.3% if no (p=0.119)\"\n],\n[\n\"fibrinolysis_celiasum_1m_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Celiasum 1m IU\",\n\"HF 8.3% (n=12) if yes vs 23.3% if no (p=0.221)\"\n],\n[\n\"fibrinolysis_celiasum_3m_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Celiasum 3m IU\",\n\"HF 11.1% if yes vs 23.6% if no (p=0.051)\"\n],\n[\n\"fibrinolysis_streptase\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Streptase\",\n\"HF 33.3% (n=3) if yes vs 23.1% if no (p=0.676)\"\n],\n[\n\"fibrinolysis_celiasum_500k_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Celiasum 500k IU\",\n\"HF 20.0% (n=5) if yes vs 23.2% if no (p=0.866)\"\n],\n[\n\"fibrinolysis_celiasum_250k_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Celiasum 250k IU\",\n\"HF 0.0% (n=5) if yes vs 23.3% if no (p=0.219)\"\n],\n[\n\"fibrinolysis_streptodecase_1_5m_iu\",\n\"binary\",\n\"admission\",\n\"0.50%\",\n\"Fibrinolytic therapy by Streptodecase 1.5m IU\",\n\"HF 0.0% (n=1) if yes vs 23.2% if no (p=0.583)\"\n],\n[\n\"time_to_hospital\",\n\"ordinal\",\n\"admission\",\n\"7.46%\",\n\"Time elapsed from the beginning of the attack of coronary heart disease to the hospital. Codes: 1=less than 2 hours; 2=2-4 hours; 3=4-6 hours; 4=6-8 hours; 5=8-12 hours; 6=12-24 hours; 7=more than 1 day; 8=more than 2 days; 9=more than 3 days\",\n\"HF by code: 1: 21.0%, 2: 26.1%, 3: 30.3%, 4: 24.1%, 5: 18.8%, 6: 14.7%, 7: 27.7%, 8: 17.8%, 9: 24.2% (p=0.123)\"\n],\n[\n\"opioids_emergency_team\",\n\"binary\",\n\"admission\",\n\"38.22%\",\n\"Use of opioid drugs by the Emergency Cardiology Team\",\n\"HF 24.3% if yes vs 21.3% if no (p=0.347)\"\n],\n[\n\"nsaids_emergency_team\",\n\"binary\",\n\"admission\",\n\"39.90%\",\n\"Use of NSAIDs by the Emergency Cardiology Team\",\n\"HF 24.7% if yes vs 18.6% if no (p=0.072)\"\n],\n[\n\"lidocaine_emergency_team\",\n\"binary\",\n\"admission\",\n\"39.56%\",\n\"Use of lidocaine by the Emergency Cardiology Team\",\n\"HF 26.5% if yes vs 21.3% if no (p=0.104)\"\n],\n[\n\"iv_nitrates_icu\",\n\"binary\",\n\"admission\",\n\"0.67%\",\n\"Use of liquid (intravenous) nitrates in the ICU\",\n\"HF 24.6% if yes vs 23.2% if no (p=0.709)\"\n]\n]\nprint(\"Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates -- 12 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_prehospital_and_fibrinolysis",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      },
+      {
+        "id": "script-profile-icu-course-days-1-3",
+        "type": "script",
+        "position": {
+          "x": 900,
+          "y": 580
+        },
+        "data": {
+          "label": "profile_icu_course_days_1_3",
+          "config": {
+            "code": "# profile_icu_course_days_1_3: precomputed training-set profile of our MI dataset. Prints only; computes nothing.\nROWS = [\n[\n\"pain_relapse_day_1\",\n\"ordinal\",\n\"end of day 1\",\n\"1.01%\",\n\"Relapse of the pain in the first hours of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\",\n\"HF by code: 0: 22.2%, 1: 27.1%, 2: 26.4%, 3: 18.8% (n=16) (p=0.410)\"\n],\n[\n\"pain_relapse_day_2\",\n\"ordinal\",\n\"end of day 2\",\n\"5.95%\",\n\"Relapse of the pain in the second day of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\",\n\"HF by code: 0: 24.2%, 1: 26.9%, 2: 25.9% (n=27), 3: 0.0% (n=1) (p=0.870)\"\n],\n[\n\"pain_relapse_day_3\",\n\"ordinal\",\n\"end of day 3\",\n\"7.12%\",\n\"Relapse of the pain in the third day of the hospital period (cases). Codes: 0=there is no relapse; 1=only one; 2=2 times; 3=3 or more times\",\n\"HF by code: 0: 24.1%, 1: 33.8%, 2: 44.4% (n=9), 3: 0.0% (n=2) (p=0.124)\"\n],\n[\n\"opioids_icu_day_1\",\n\"ordinal\",\n\"end of day 1\",\n\"0.42%\",\n\"Use of opioid drugs in the ICU in the first hours of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\",\n\"HF by code: 0: 21.9%, 1: 23.7%, 2: 33.3%, 3: 25.9% (n=27), 4: 16.7% (n=6) (p=0.165)\"\n],\n[\n\"opioids_icu_day_2\",\n\"ordinal\",\n\"end of day 2\",\n\"5.95%\",\n\"Use of opioid drugs in the ICU in the second day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\",\n\"HF by code: 0: 24.0%, 1: 27.4%, 2: 55.6% (n=18), 3: 0.0% (n=1) (p=0.018)\"\n],\n[\n\"opioids_icu_day_3\",\n\"ordinal\",\n\"end of day 3\",\n\"7.38%\",\n\"Use of opioid drugs in the ICU in the third day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times\",\n\"HF by code: 0: 23.9%, 1: 45.7%, 2: 50.0% (n=10) (p<0.001)\"\n],\n[\n\"nsaids_icu_day_1\",\n\"ordinal\",\n\"end of day 1\",\n\"0.67%\",\n\"Use of NSAIDs in the ICU in the first hours of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times; 4=four or more times\",\n\"HF by code: 0: 22.0%, 1: 26.0%, 2: 32.4%, 3: 16.7% (n=12), 4: 100.0% (n=4) (p=0.002)\"\n],\n[\n\"nsaids_icu_day_2\",\n\"ordinal\",\n\"end of day 2\",\n\"6.04%\",\n\"Use of NSAIDs in the ICU in the second day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice; 3=three times\",\n\"HF by code: 0: 24.3%, 1: 26.1%, 2: 33.3% (n=27), 3: 50.0% (n=2) (p=0.591)\"\n],\n[\n\"nsaids_icu_day_3\",\n\"ordinal\",\n\"end of day 3\",\n\"7.29%\",\n\"Use of NSAIDs in the ICU in the third day of the hospital period (cases). Codes: 0=no; 1=once; 2=twice\",\n\"HF by code: 0: 24.7%, 1: 26.2%, 2: 38.5% (n=26) (p=0.272)\"\n],\n[\n\"lidocaine_icu\",\n\"binary\",\n\"admission\",\n\"0.67%\",\n\"Use of lidocaine in the ICU\",\n\"HF 24.0% if yes vs 23.1% if no (p=0.735)\"\n],\n[\n\"beta_blockers_icu\",\n\"binary\",\n\"admission\",\n\"0.75%\",\n\"Use of beta-blockers in the ICU\",\n\"HF 19.0% if yes vs 24.1% if no (p=0.164)\"\n],\n[\n\"calcium_channel_blockers_icu\",\n\"binary\",\n\"admission\",\n\"0.84%\",\n\"Use of calcium channel blockers in the ICU\",\n\"HF 25.9% if yes vs 18.6% if no (p=0.005)\"\n],\n[\n\"heparin_icu\",\n\"binary\",\n\"admission\",\n\"1.09%\",\n\"Use of anticoagulants (heparin) in the ICU\",\n\"HF 22.6% if yes vs 25.5% if no (p=0.277)\"\n],\n[\n\"aspirin_icu\",\n\"binary\",\n\"admission\",\n\"1.09%\",\n\"Use of acetylsalicylic acid in the ICU\",\n\"HF 23.6% if yes vs 23.2% if no (p=0.909)\"\n],\n[\n\"ticlopidine_icu\",\n\"binary\",\n\"admission\",\n\"0.92%\",\n\"Use of Ticlid (ticlopidine) in the ICU\",\n\"HF 16.0% (n=25) if yes vs 23.6% if no (p=0.375)\"\n],\n[\n\"pentoxifylline_icu\",\n\"binary\",\n\"admission\",\n\"0.92%\",\n\"Use of Trental (pentoxifylline) in the ICU\",\n\"HF 24.7% if yes vs 23.1% if no (p=0.599)\"\n]\n]\nprint(\"ICU drugs and pain relapse over hospital days 1-3 -- 16 variables\")\nprint(\"Columns: name | type | known at | % missing | meaning (with codes) | precomputed unadjusted association with heart_failure in the training set (1,193 patients). These are fixed results; nothing is calculated here.\")\nfor r in ROWS:\n    print(' | '.join([r[0], r[1], 'known at ' + r[2], r[3] + ' missing', r[4], r[5]]))\n",
+            "name": "profile_icu_course_days_1_3",
+            "language": "python"
+          },
+          "factor_bindings": {}
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-llm-scout",
+        "source": "llm-shared",
+        "target": "agent-scout",
+        "sourceHandle": "model",
+        "targetHandle": "model"
+      },
+      {
+        "id": "e-llm-analyst",
+        "source": "llm-shared",
+        "target": "agent-analyst",
+        "sourceHandle": "model",
+        "targetHandle": "model"
+      },
+      {
+        "id": "e-pattern-scout",
+        "source": "pattern-scout",
+        "target": "agent-scout",
+        "sourceHandle": "architectural_pattern",
+        "targetHandle": "architectural_pattern"
+      },
+      {
+        "id": "e-pattern-analyst",
+        "source": "pattern-analyst",
+        "target": "agent-analyst",
+        "sourceHandle": "architectural_pattern",
+        "targetHandle": "architectural_pattern"
+      },
+      {
+        "id": "e-parser-scout",
+        "source": "parser-scout",
+        "target": "agent-scout",
+        "sourceHandle": "output_parser",
+        "targetHandle": "output_parser"
+      },
+      {
+        "id": "e-parser-analyst",
+        "source": "parser-analyst",
+        "target": "agent-analyst",
+        "sourceHandle": "output_parser",
+        "targetHandle": "output_parser"
+      },
+      {
+        "id": "e-script-lr",
+        "source": "script-lr",
+        "target": "tool-step-lr",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-model-server-lr",
+        "source": "tool-model-lr",
+        "target": "tool-step-lr",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-scout-analyst",
+        "source": "agent-scout",
+        "target": "agent-analyst"
+      },
+      {
+        "id": "e-analyst-lr",
+        "source": "agent-analyst",
+        "target": "tool-step-lr"
+      },
+      {
+        "id": "e-script-variable-index",
+        "source": "script-variable-index",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-demographics-cardiac-history",
+        "source": "script-profile-demographics-cardiac-history",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-arrhythmia-history",
+        "source": "script-profile-arrhythmia-history",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-comorbidities",
+        "source": "script-profile-comorbidities",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-admission-vitals-complications",
+        "source": "script-profile-admission-vitals-complications",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-infarct-location",
+        "source": "script-profile-infarct-location",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-ecg-rhythm-admission",
+        "source": "script-profile-ecg-rhythm-admission",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-ecg-conduction-admission",
+        "source": "script-profile-ecg-conduction-admission",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-labs",
+        "source": "script-profile-labs",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-prehospital-and-fibrinolysis",
+        "source": "script-profile-prehospital-and-fibrinolysis",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      },
+      {
+        "id": "e-script-profile-icu-course-days-1-3",
+        "source": "script-profile-icu-course-days-1-3",
+        "target": "agent-analyst",
+        "sourceHandle": "tool",
+        "targetHandle": "tool"
+      }
+    ]
+  },
+  "design_spec": {
+    "factors": [
+      {
+        "name": "Azure Foundry:Effort",
+        "levels": [
+          null,
+          "xhigh"
+        ],
+        "level_type": "string",
+        "level_labels": [
+          "medium",
+          "xhigh"
+        ]
+      },
+      {
+        "name": "Azure Foundry:Model",
+        "levels": [
+          "claude-sonnet-5",
+          "claude-haiku-5-5"
+        ],
+        "level_type": "string",
+        "level_labels": [
+          "sonnet-5",
+          "haiku-5"
+        ]
+      },
+      {
+        "name": "Data Analyst:System prompt",
+        "levels": [
+          "You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team's research question and the Literature Scout's findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=<name>): prints part of a profile of the training set that was computed in advance. Each row gives a variable's type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\"variable_index\") first: it lists every variable and which profile script prints it.\n2. For each risk factor from the Literature Scout, find the variable(s) in the index that could stand for it and run the profile script(s) that print them. If several variables could stand for a risk factor, look at the candidates. If no variable fits, it is \"Not in our dataset\". Run as few scripts as you can.\n3. Quote numbers only from the scripts' output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission: the variables you looked up that match the literature's risk factors (or that you judge worth testing), known at admission, with at most 30% missing. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.",
+          "You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team's research question and the Literature Scout's findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=<name>): prints part of a profile of the training set that was computed in advance. Each row gives a variable's type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\"variable_index\") first: it lists every variable and which profile script prints it.\n2. Run the profile script for every family that contains variables known at admission, so that you have seen the whole training-set profile before you choose. Also map each risk factor from the Literature Scout to the variable(s) that could stand for it; if no variable fits, it is \"Not in our dataset\".\n3. Quote numbers only from the scripts' output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission, starting from our data rather than from the literature: variables known at admission, with at most 30% missing, whose training-set profile suggests they could help predict heart_failure (a clear difference between patients with and without heart failure, in groups that are not tiny), whether or not the Literature Scout mentioned them. Then use the literature as a check: keep a literature risk factor that our data supports, and in section 2 say which chosen features the literature did not mention. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words."
+        ],
+        "level_type": "text",
+        "level_labels": [
+          "literature-led",
+          "data-led"
+        ]
+      }
+    ],
+    "metrics": [
+      {
+        "id": "runtime-cost",
+        "kind": "runtime",
+        "name": "Cost",
+        "unit": "USD",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "cost_usd",
+        "aggregation": "sum",
+        "description": "Estimated provider cost for the run."
+      },
+      {
+        "id": "runtime-duration",
+        "kind": "runtime",
+        "name": "Duration",
+        "unit": "seconds",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "duration_seconds",
+        "aggregation": "sum",
+        "description": "Wall-clock duration of the run."
+      },
+      {
+        "id": "runtime-input-tokens",
+        "kind": "runtime",
+        "name": "Input tokens",
+        "unit": "tokens",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "input_tokens",
+        "aggregation": "sum",
+        "description": "Tokens sent to the model during the run."
+      },
+      {
+        "id": "runtime-output-tokens",
+        "kind": "runtime",
+        "name": "Output tokens",
+        "unit": "tokens",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "output_tokens",
+        "aggregation": "sum",
+        "description": "Tokens generated by the model during the run."
+      },
+      {
+        "id": "runtime-total-tokens",
+        "kind": "runtime",
+        "name": "Total tokens",
+        "unit": "tokens",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "total_tokens",
+        "aggregation": "sum",
+        "description": "Combined input and output tokens for the run."
+      },
+      {
+        "id": "runtime-tool-calls",
+        "kind": "runtime",
+        "name": "Tool calls",
+        "unit": "calls",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "tool_calls",
+        "aggregation": "sum",
+        "description": "Recorded tool-call attempts across attributed Agent runs."
+      },
+      {
+        "id": "runtime-tool-error-rate",
+        "kind": "runtime",
+        "name": "Tool error rate",
+        "unit": "rate",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "tool_error_rate",
+        "aggregation": "mean",
+        "description": "Failed tool calls divided by all tool-call attempts."
+      },
+      {
+        "id": "runtime-agent-loop-iterations",
+        "kind": "runtime",
+        "name": "Agent-loop iterations",
+        "unit": "iterations",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "agent_loop_iterations",
+        "aggregation": "sum",
+        "description": "Distinct Agent reasoning-loop iterations in the run."
+      },
+      {
+        "id": "runtime-prompt-sha256",
+        "kind": "runtime",
+        "name": "Prompt SHA-256",
+        "direction": "neutral",
+        "valueType": "opaque",
+        "catalogKey": "prompt_sha256",
+        "aggregation": "none",
+        "description": "Hash of the published stage prompts, critic criteria and output contracts."
+      },
+      {
+        "id": "runtime-capped-agent-runs",
+        "kind": "runtime",
+        "name": "Capped agent runs",
+        "unit": "runs",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "capped_agent_runs",
+        "aggregation": "sum",
+        "description": "Reason+Act runs cut off by their iteration ceiling."
+      },
+      {
+        "id": "runtime-agent-runs",
+        "kind": "runtime",
+        "name": "Agent runs",
+        "unit": "runs",
+        "direction": "neutral",
+        "valueType": "number",
+        "catalogKey": "agent_runs",
+        "aggregation": "sum",
+        "description": "Every agent and critic run the attempt launched, revisions included."
+      },
+      {
+        "id": "runtime-react-runs",
+        "kind": "runtime",
+        "name": "Reason+Act runs",
+        "unit": "runs",
+        "direction": "neutral",
+        "valueType": "number",
+        "catalogKey": "react_runs",
+        "aggregation": "sum",
+        "description": "Runs that went through a Reason+Act loop."
+      },
+      {
+        "id": "runtime-react-turns",
+        "kind": "runtime",
+        "name": "Reason+Act turns",
+        "unit": "turns",
+        "direction": "minimize",
+        "valueType": "number",
+        "catalogKey": "react_turns",
+        "aggregation": "sum",
+        "description": "Loop iterations reported by Reason+Act runs."
+      },
+      {
+        "id": "runtime-react-tool-calls",
+        "kind": "runtime",
+        "name": "Reason+Act tool calls",
+        "unit": "calls",
+        "direction": "neutral",
+        "valueType": "number",
+        "catalogKey": "react_tool_calls",
+        "aggregation": "sum",
+        "description": "Tool calls counted by Reason+Act loops."
+      },
+      {
+        "id": "tokens-scout",
+        "name": "tokens_scout",
+        "kind": "custom"
+      },
+      {
+        "id": "n-turns-scout",
+        "name": "n_turns_scout",
+        "kind": "custom"
+      },
+      {
+        "id": "tokens-analyst",
+        "name": "tokens_analyst",
+        "kind": "custom"
+      },
+      {
+        "id": "n-turns-analyst",
+        "name": "n_turns_analyst",
+        "kind": "custom"
+      },
+      {
+        "id": "n-papers-fetched",
+        "name": "n_papers_fetched",
+        "kind": "custom"
+      },
+      {
+        "id": "n-scout-risk-factors",
+        "name": "n_scout_risk_factors",
+        "kind": "custom"
+      },
+      {
+        "id": "n-features-chosen",
+        "name": "n_features_chosen",
+        "kind": "custom"
+      },
+      {
+        "id": "n-risk-factors-mapped",
+        "name": "n_risk_factors_mapped",
+        "kind": "custom"
+      },
+      {
+        "id": "n-usable-risk-factors",
+        "name": "n_usable_risk_factors",
+        "kind": "custom"
+      },
+      {
+        "id": "n-not-in-dataset",
+        "name": "n_not_in_dataset",
+        "kind": "custom"
+      },
+      {
+        "id": "n-predictive-questions",
+        "name": "n_predictive_questions",
+        "kind": "custom"
+      },
+      {
+        "id": "test-auc",
+        "name": "test_auc",
+        "kind": "custom"
+      },
+      {
+        "id": "test-pr-auc",
+        "name": "test_pr_auc",
+        "kind": "custom"
+      },
+      {
+        "id": "test-brier",
+        "name": "test_brier",
+        "kind": "custom"
+      },
+      {
+        "id": "test-prevalence",
+        "name": "test_prevalence",
+        "kind": "custom"
+      },
+      {
+        "id": "n-test-samples",
+        "name": "n_test_samples",
+        "kind": "custom"
+      },
+      {
+        "id": "cv-auc-mean",
+        "name": "cv_auc_mean",
+        "kind": "custom"
+      },
+      {
+        "id": "cv-auc-sd",
+        "name": "cv_auc_sd",
+        "kind": "custom"
+      },
+      {
+        "id": "cv-pr-auc-mean",
+        "name": "cv_pr_auc_mean",
+        "kind": "custom"
+      },
+      {
+        "id": "cv-brier-mean",
+        "name": "cv_brier_mean",
+        "kind": "custom"
+      },
+      {
+        "id": "train-auc",
+        "name": "train_auc",
+        "kind": "custom"
+      },
+      {
+        "id": "n-features-requested",
+        "name": "n_features_requested",
+        "kind": "custom"
+      },
+      {
+        "id": "n-features-used",
+        "name": "n_features_used",
+        "kind": "custom"
+      },
+      {
+        "id": "n-features-dropped",
+        "name": "n_features_dropped",
+        "kind": "custom"
+      },
+      {
+        "id": "n-model-columns",
+        "name": "n_model_columns",
+        "kind": "custom"
+      },
+      {
+        "id": "events-per-column",
+        "name": "events_per_column",
+        "kind": "custom"
+      },
+      {
+        "id": "model-fitted",
+        "name": "model_fitted",
+        "kind": "custom"
+      },
+      {
+        "id": "code-sha256",
+        "name": "code_sha256",
+        "kind": "custom"
+      },
+      {
+        "id": "payload-sha256",
+        "name": "payload_sha256",
+        "kind": "custom"
+      },
+      {
+        "id": "data-sha256",
+        "name": "data_sha256",
+        "kind": "custom"
+      }
+    ],
+    "replicates": 5,
+    "randomization_seed": 42,
+    "coordination_strategy": {
+      "slug": "sequential",
+      "params": {}
+    }
+  },
+  "measurement_plan": {
+    "metrics": [
+      {
+        "id": "runtime-cost",
+        "name": "Cost",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Estimated provider cost for the run.",
+        "unit": "USD"
+      },
+      {
+        "id": "runtime-duration",
+        "name": "Duration",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Wall-clock duration of the run.",
+        "unit": "seconds"
+      },
+      {
+        "id": "runtime-input-tokens",
+        "name": "Input tokens",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Tokens sent to the model during the run.",
+        "unit": "tokens"
+      },
+      {
+        "id": "runtime-output-tokens",
+        "name": "Output tokens",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Tokens generated by the model during the run.",
+        "unit": "tokens"
+      },
+      {
+        "id": "runtime-total-tokens",
+        "name": "Total tokens",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Combined input and output tokens for the run.",
+        "unit": "tokens"
+      },
+      {
+        "id": "runtime-tool-calls",
+        "name": "Tool calls",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Recorded tool-call attempts across attributed Agent runs.",
+        "unit": "calls"
+      },
+      {
+        "id": "runtime-tool-error-rate",
+        "name": "Tool error rate",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "mean",
+        "description": "Failed tool calls divided by all tool-call attempts.",
+        "unit": "rate"
+      },
+      {
+        "id": "runtime-agent-loop-iterations",
+        "name": "Agent-loop iterations",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Distinct Agent reasoning-loop iterations in the run.",
+        "unit": "iterations"
+      },
+      {
+        "id": "runtime-prompt-sha256",
+        "name": "Prompt SHA-256",
+        "value_type": "opaque",
+        "direction": "neutral",
+        "aggregation": "none",
+        "description": "Hash of the published stage prompts, critic criteria and output contracts."
+      },
+      {
+        "id": "runtime-capped-agent-runs",
+        "name": "Capped agent runs",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Reason+Act runs cut off by their iteration ceiling.",
+        "unit": "runs"
+      },
+      {
+        "id": "runtime-agent-runs",
+        "name": "Agent runs",
+        "value_type": "number",
+        "direction": "neutral",
+        "aggregation": "sum",
+        "description": "Every agent and critic run the attempt launched, revisions included.",
+        "unit": "runs"
+      },
+      {
+        "id": "runtime-react-runs",
+        "name": "Reason+Act runs",
+        "value_type": "number",
+        "direction": "neutral",
+        "aggregation": "sum",
+        "description": "Runs that went through a Reason+Act loop.",
+        "unit": "runs"
+      },
+      {
+        "id": "runtime-react-turns",
+        "name": "Reason+Act turns",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "description": "Loop iterations reported by Reason+Act runs.",
+        "unit": "turns"
+      },
+      {
+        "id": "runtime-react-tool-calls",
+        "name": "Reason+Act tool calls",
+        "value_type": "number",
+        "direction": "neutral",
+        "aggregation": "sum",
+        "description": "Tool calls counted by Reason+Act loops.",
+        "unit": "calls"
+      },
+      {
+        "id": "tokens-scout",
+        "name": "tokens_scout",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "primary": false,
+        "unit": "tokens",
+        "description": "Input plus output tokens across every run of the Literature Scout."
+      },
+      {
+        "id": "n-turns-scout",
+        "name": "n_turns_scout",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "primary": false,
+        "unit": "turns",
+        "description": "Agent-loop turns across every run of the Literature Scout."
+      },
+      {
+        "id": "tokens-analyst",
+        "name": "tokens_analyst",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "primary": false,
+        "unit": "tokens",
+        "description": "Input plus output tokens across every run of the Data Analyst."
+      },
+      {
+        "id": "n-turns-analyst",
+        "name": "n_turns_analyst",
+        "value_type": "number",
+        "direction": "minimize",
+        "aggregation": "sum",
+        "primary": false,
+        "unit": "turns",
+        "description": "Agent-loop turns across every run of the Data Analyst."
+      },
+      {
+        "id": "n-papers-fetched",
+        "name": "n_papers_fetched"
+      },
+      {
+        "id": "n-scout-risk-factors",
+        "name": "n_scout_risk_factors"
+      },
+      {
+        "id": "n-features-chosen",
+        "name": "n_features_chosen"
+      },
+      {
+        "id": "n-risk-factors-mapped",
+        "name": "n_risk_factors_mapped"
+      },
+      {
+        "id": "n-usable-risk-factors",
+        "name": "n_usable_risk_factors"
+      },
+      {
+        "id": "n-not-in-dataset",
+        "name": "n_not_in_dataset"
+      },
+      {
+        "id": "n-predictive-questions",
+        "name": "n_predictive_questions"
+      },
+      {
+        "id": "test-auc",
+        "name": "test_auc",
+        "value_type": "number",
+        "direction": "maximize",
+        "primary": true,
+        "description": "ROC AUC on the held-out test set (507 patients), scored by ASAREE."
+      },
+      {
+        "id": "test-pr-auc",
+        "name": "test_pr_auc",
+        "value_type": "number",
+        "direction": "maximize",
+        "primary": false,
+        "description": "PR-AUC (average precision) on the held-out test set; no skill = test prevalence."
+      },
+      {
+        "id": "test-brier",
+        "name": "test_brier",
+        "value_type": "number",
+        "direction": "minimize",
+        "primary": false,
+        "description": "Brier score on the held-out test set."
+      },
+      {
+        "id": "test-prevalence",
+        "name": "test_prevalence"
+      },
+      {
+        "id": "n-test-samples",
+        "name": "n_test_samples"
+      },
+      {
+        "id": "cv-auc-mean",
+        "name": "cv_auc_mean",
+        "value_type": "number",
+        "direction": "maximize",
+        "primary": false,
+        "description": "Mean ROC AUC over 5 CV folds inside the training set."
+      },
+      {
+        "id": "cv-auc-sd",
+        "name": "cv_auc_sd"
+      },
+      {
+        "id": "cv-pr-auc-mean",
+        "name": "cv_pr_auc_mean",
+        "value_type": "number",
+        "direction": "maximize",
+        "primary": false
+      },
+      {
+        "id": "cv-brier-mean",
+        "name": "cv_brier_mean",
+        "value_type": "number",
+        "direction": "minimize",
+        "primary": false
+      },
+      {
+        "id": "train-auc",
+        "name": "train_auc",
+        "description": "ROC AUC on the training rows the final model learned from."
+      },
+      {
+        "id": "n-features-requested",
+        "name": "n_features_requested"
+      },
+      {
+        "id": "n-features-used",
+        "name": "n_features_used"
+      },
+      {
+        "id": "n-features-dropped",
+        "name": "n_features_dropped",
+        "value_type": "number",
+        "direction": "minimize",
+        "primary": false,
+        "description": "Requested features the fixed code had to drop (not in dataset, after admission, >30% missing)."
+      },
+      {
+        "id": "n-model-columns",
+        "name": "n_model_columns"
+      },
+      {
+        "id": "events-per-column",
+        "name": "events_per_column"
+      },
+      {
+        "id": "model-fitted",
+        "name": "model_fitted",
+        "value_type": "number",
+        "direction": "maximize",
+        "primary": false,
+        "description": "1 if a model was fitted, 0 if no requested feature was usable (test scored as no-skill)."
+      },
+      {
+        "id": "code-sha256",
+        "name": "code_sha256"
+      },
+      {
+        "id": "payload-sha256",
+        "name": "payload_sha256"
+      },
+      {
+        "id": "data-sha256",
+        "name": "data_sha256"
+      }
+    ],
+    "producers": [
+      {
+        "id": "runtime-scout",
+        "producer_id": "asaree.node_runtime",
+        "kind": "runtime",
+        "outputs": {
+          "total_tokens": "tokens-scout",
+          "agent_loop_iterations": "n-turns-scout"
+        },
+        "artifacts": [],
+        "config": {
+          "node_ids": [
+            "agent-scout"
+          ]
+        }
+      },
+      {
+        "id": "runtime-analyst",
+        "producer_id": "asaree.node_runtime",
+        "kind": "runtime",
+        "outputs": {
+          "total_tokens": "tokens-analyst",
+          "agent_loop_iterations": "n-turns-analyst"
+        },
+        "artifacts": [],
+        "config": {
+          "node_ids": [
+            "agent-analyst"
+          ]
+        }
+      },
+      {
+        "id": "scout-report-source",
+        "producer_id": "asaree.agent_output",
+        "kind": "reported",
+        "outputs": {
+          "n_papers_fetched": "n-papers-fetched",
+          "n_scout_risk_factors": "n-scout-risk-factors"
+        },
+        "artifacts": [],
+        "config": {
+          "projections": {
+            "n_papers_fetched": {
+              "path": "pmids",
+              "transform": "length"
+            },
+            "n_scout_risk_factors": {
+              "path": "risk_factors",
+              "transform": "length"
+            }
+          },
+          "agent_node_id": "agent-scout"
+        }
+      },
+      {
+        "id": "analyst-report-source",
+        "producer_id": "asaree.agent_output",
+        "kind": "reported",
+        "outputs": {
+          "n_features_chosen": "n-features-chosen",
+          "n_risk_factors_mapped": "n-risk-factors-mapped",
+          "n_usable_risk_factors": "n-usable-risk-factors",
+          "n_not_in_dataset": "n-not-in-dataset",
+          "n_predictive_questions": "n-predictive-questions"
+        },
+        "artifacts": [],
+        "config": {
+          "projections": {
+            "n_features_chosen": {
+              "path": "features",
+              "transform": "length"
+            },
+            "n_risk_factors_mapped": {
+              "path": "risk_factor_rows",
+              "transform": "length"
+            },
+            "n_usable_risk_factors": {
+              "path": "usable_risk_factors",
+              "transform": "length"
+            },
+            "n_not_in_dataset": {
+              "path": "not_in_dataset",
+              "transform": "length"
+            },
+            "n_predictive_questions": {
+              "path": "predictive_questions",
+              "transform": "length"
+            }
+          },
+          "agent_node_id": "agent-analyst"
+        }
+      },
+      {
+        "id": "model-evaluation-source",
+        "producer_id": "asaree.tool_step",
+        "kind": "reported",
+        "outputs": {
+          "test_auc": "test-auc",
+          "test_pr_auc": "test-pr-auc",
+          "test_brier": "test-brier",
+          "test_prevalence": "test-prevalence",
+          "n_test_samples": "n-test-samples",
+          "cv_auc_mean": "cv-auc-mean",
+          "cv_auc_sd": "cv-auc-sd",
+          "cv_pr_auc_mean": "cv-pr-auc-mean",
+          "cv_brier_mean": "cv-brier-mean",
+          "train_auc": "train-auc",
+          "n_features_requested": "n-features-requested",
+          "n_features_used": "n-features-used",
+          "n_features_dropped": "n-features-dropped",
+          "n_model_columns": "n-model-columns",
+          "events_per_column": "events-per-column",
+          "model_fitted": "model-fitted",
+          "code_sha256": "code-sha256",
+          "payload_sha256": "payload-sha256",
+          "data_sha256": "data-sha256"
+        },
+        "artifacts": [],
+        "config": {
+          "node_id": "tool-step-lr",
+          "projections": {
+            "test_auc": {
+              "path": "test_metrics.roc_auc"
+            },
+            "test_pr_auc": {
+              "path": "test_metrics.average_precision"
+            },
+            "test_brier": {
+              "path": "test_metrics.brier_score"
+            },
+            "test_prevalence": {
+              "path": "test_metrics.test_prevalence"
+            },
+            "n_test_samples": {
+              "path": "test_metrics.n_test_samples"
+            },
+            "cv_auc_mean": {
+              "path": "model_decisions.cv_auc_mean"
+            },
+            "cv_auc_sd": {
+              "path": "model_decisions.cv_auc_sd"
+            },
+            "cv_pr_auc_mean": {
+              "path": "model_decisions.cv_pr_auc_mean"
+            },
+            "cv_brier_mean": {
+              "path": "model_decisions.cv_brier_mean"
+            },
+            "train_auc": {
+              "path": "model_decisions.train_auc"
+            },
+            "n_features_requested": {
+              "path": "model_decisions.n_features_requested"
+            },
+            "n_features_used": {
+              "path": "model_decisions.n_features_used"
+            },
+            "n_features_dropped": {
+              "path": "model_decisions.n_features_dropped"
+            },
+            "n_model_columns": {
+              "path": "model_decisions.n_model_columns"
+            },
+            "events_per_column": {
+              "path": "model_decisions.events_per_column"
+            },
+            "model_fitted": {
+              "path": "model_decisions.model_fitted"
+            },
+            "code_sha256": {
+              "path": "code_sha256"
+            },
+            "payload_sha256": {
+              "path": "payload_sha256"
+            },
+            "data_sha256": {
+              "path": "data_sha256"
+            }
+          }
+        }
+      },
+      {
+        "id": "runtime",
+        "producer_id": "asaree.runtime",
+        "kind": "runtime",
+        "outputs": {
+          "cost_usd": "runtime-cost",
+          "agent_runs": "runtime-agent-runs",
+          "react_runs": "runtime-react-runs",
+          "tool_calls": "runtime-tool-calls",
+          "react_turns": "runtime-react-turns",
+          "input_tokens": "runtime-input-tokens",
+          "total_tokens": "runtime-total-tokens",
+          "output_tokens": "runtime-output-tokens",
+          "prompt_sha256": "runtime-prompt-sha256",
+          "tool_error_rate": "runtime-tool-error-rate",
+          "duration_seconds": "runtime-duration",
+          "react_tool_calls": "runtime-react-tool-calls",
+          "capped_agent_runs": "runtime-capped-agent-runs",
+          "agent_loop_iterations": "runtime-agent-loop-iterations"
+        },
+        "artifacts": [],
+        "config": {}
+      }
+    ],
+    "inputs": [
+      {
+        "producer_binding_id": "runtime-scout",
+        "input_key": "facts",
+        "source_key": "attempt.runtime"
+      },
+      {
+        "producer_binding_id": "runtime-analyst",
+        "input_key": "facts",
+        "source_key": "attempt.runtime"
+      },
+      {
+        "producer_binding_id": "runtime",
+        "input_key": "facts",
+        "source_key": "attempt.runtime"
+      }
+    ]
+  }
+}

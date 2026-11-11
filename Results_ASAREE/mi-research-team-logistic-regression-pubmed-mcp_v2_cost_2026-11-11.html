@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'">
+<title>ASAREE statistics — Cost</title>
+<style>body{font:16px/1.6 system-ui,sans-serif;color:#202c38;max-width:1100px;margin:40px auto;padding:0 24px}
+.table-scroll{max-width:100%;overflow-x:auto;margin:16px 0}
+.numeric-value{white-space:nowrap;font-family:monospace}
+h1,h2{line-height:1.25}table{border-collapse:collapse;width:100%;font-size:14px;margin:0}
+th,td{border-bottom:1px solid #cbd5e1;text-align:left;padding:10px;vertical-align:top;
+min-width:9rem;max-width:24rem;overflow-wrap:break-word}
+th{background:#eff3f6}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+.test-method{display:block;margin-top:4px;color:#526170;font-size:12px}
+.column-method{display:block;margin-top:4px;color:#526170;font-size:11px;font-weight:normal}
+.model-fit{margin:20px 0;padding:20px;border:1px solid #dce6eb;border-radius:8px}.model-fit h3{margin:0 0 12px}
+.fit-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0}
+.fit-summary dt{font-size:12px;color:#526170}.fit-summary dd{margin:2px 0 0;font:15px monospace}
+.report-header{padding:24px;border:1px solid #b6d9e4;border-top:4px solid #167fa2;
+border-radius:12px;background:#f6fafc}
+.report-header h1{margin:4px 0 16px}.report-header>p{margin:8px 0 20px;color:#526170}
+.report-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:0}
+.report-summary>div{padding:12px 14px;background:#fff;border:1px solid #dce6eb;border-radius:8px;min-width:0}
+.report-summary dt{font-size:11px;color:#526170;letter-spacing:.06em;text-transform:uppercase}
+.report-summary dd{margin:6px 0 0;font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.report-header .coding-note{font-size:12px;margin:12px 0 0}
+.detail h3{font-size:14px;margin:20px 0 4px}
+.notice{padding:12px 16px;border:1px solid #d97706;border-radius:8px;background:#fff7ed}
+.detail table{font-size:12px}
+figure{margin:20px 0;padding:20px;border:1px solid #dce6eb;border-radius:8px;break-inside:avoid}
+figcaption{font-size:12px;color:#526170;margin-bottom:16px}
+.chart{display:flex;gap:8px}.chart-body{flex:1;min-width:0}
+.y-title{writing-mode:vertical-rl;transform:rotate(180deg);height:180px;text-align:center;font-size:12px}
+.y-ticks{display:flex;height:180px;flex-direction:column;justify-content:space-between;
+text-align:right;font:11px monospace;color:#526170}
+.distribution{display:flex;gap:1px;list-style:none;padding:0;margin:0;height:180px;border-bottom:1px solid #94a3b8;
+background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),#dce6eb 25%)}
+.distribution.frequencies{gap:8px}.distribution li{display:flex;align-items:flex-end;flex:1;min-width:0}
+.bar{display:block;width:100%;background:#318eaa;border:1px solid #167fa2;box-sizing:border-box}
+.x-ticks{display:grid;margin-top:8px;font:10px monospace;color:#526170;overflow-wrap:anywhere}
+.x-ticks span{text-align:center}.x-title{text-align:center;font-size:12px;color:#526170}
+.numeric-ticks{display:flex;justify-content:space-between;gap:4px;margin-top:8px;font:10px monospace;color:#526170}
+.boxplots>p{font-size:13px;color:#526170}.box-figure figcaption{font-size:14px;font-weight:600}
+.box-scroll{overflow-x:auto;max-width:100%}
+.box-chart{display:flex;gap:8px;width:max-content;min-width:100%}
+.box-y-title{writing-mode:vertical-rl;transform:rotate(180deg);height:370px;
+text-align:center;font-size:12px;max-width:3rem;overflow-wrap:anywhere}
+.box-y-ticks{display:flex;flex-direction:column;justify-content:space-between;height:350px;
+margin-top:20px;text-align:right;font:11px monospace;color:#526170}
+.box-groups{display:flex;flex:1;gap:16px;position:relative}
+.box-groups::before{content:"";position:absolute;top:370px;left:0;right:0;
+border-top:1px solid #94a3b8;pointer-events:none}
+.box-group{flex:1;min-width:max-content}
+.box-traces{display:flex;justify-content:center;gap:16px}.box-slot{flex:1;min-width:max-content;text-align:center}
+.box-slot svg{display:block;width:80px;height:370px;margin-inline:auto;
+stroke:#167fa2;fill:none;stroke-width:1.5}
+.box-slot rect{fill:#deeff4}.box-slot .box-median{stroke:#202c38;stroke-width:2}.box-slot circle{fill:#167fa2}
+.box-slot p,.box-level{margin:8px 0 4px;font:11px monospace;white-space:nowrap;text-align:center}
+.box-slot small{display:block;color:#526170}.box-level{font-weight:600;padding:8px 0}
+.missing-box{height:370px;display:flex;align-items:center;font-size:11px;color:#526170}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.methodology{margin:24px 0;border:1px solid #b6d9e4;border-radius:12px;overflow:hidden}
+.methodology header{padding:20px;background:#eef8fb;border-bottom:1px solid #b6d9e4}
+.methodology h2,.methodology h3{margin:4px 0 12px}.methodology p{font-size:13px}
+.eyebrow{font:11px monospace;color:#167fa2;text-transform:uppercase;letter-spacing:2px}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;padding:16px}
+.method-step{padding:16px;border:1px solid #dce6eb;border-radius:8px;min-width:0;overflow-wrap:anywhere}
+.method-step h3{font-size:15px}.method-step h4{font-size:13px;margin:12px 0 4px}
+.method-step li{font-size:13px;margin:8px 0}.methodology details{padding:16px;border-top:1px solid #dce6eb}
+@media print{body{margin:0;max-width:none}.table-scroll{overflow:visible}
+th,td{min-width:0;overflow-wrap:anywhere}.numeric-value{white-space:normal}tr{break-inside:avoid}}</style></head>
+<body><header class="report-header"><p class="eyebrow">ASAREE · Statistical report</p>
+<h1>Statistical results: Cost</h1>
+<p>Analyzed 40 runs for Cost as a continuous measurement.</p>
+<dl class="report-summary"><div><dt>Metric description</dt><dd>Estimated provider cost for the run.</dd></div><div><dt>Unit</dt><dd>USD</dd></div><div><dt>Analysis status</dt><dd>valid</dd></div><div><dt>Execution</dt><dd>completed</dd></div><div><dt>Analyzed observations</dt><dd>40</dd></div><div><dt>Created</dt><dd>Nov 11, 2026 at 10:59 PM UTC</dd></div></dl>
+</header>
+<ul><li>The primary parametric-bootstrap interval found evidence of a difference for Azure Foundry › Effort = high vs medium (pointwise; not multiplicity-adjusted).</li><li>The primary parametric-bootstrap interval found evidence of a difference for Azure Foundry › Model = haiku-5-5 vs sonnet-5-5 (pointwise; not multiplicity-adjusted).</li><li>The primary parametric-bootstrap interval found no clear evidence of a difference for Data Analyst › System prompt = data-led vs literature-led (pointwise; not multiplicity-adjusted).</li><li>The primary parametric-bootstrap interval found evidence of a difference for Azure Foundry › Effort (high vs medium) × Azure Foundry › Model (haiku-5-5 vs sonnet-5-5) (pointwise; not multiplicity-adjusted).</li><li>The primary parametric-bootstrap interval found evidence of a difference for Azure Foundry › Effort (high vs medium) × Data Analyst › System prompt (data-led vs literature-led) (pointwise; not multiplicity-adjusted).</li><li>The primary parametric-bootstrap interval found evidence of a difference for Azure Foundry › Model (haiku-5-5 vs sonnet-5-5) × Data Analyst › System prompt (data-led vs literature-led) (pointwise; not multiplicity-adjusted).</li><li>Secondary factor test: Both the main test and the permutation check found evidence that Azure Foundry › Effort has an effect on this metric.</li><li>Secondary factor test: Both the main test and the permutation check found evidence that Azure Foundry › Model has an effect on this metric.</li><li>Secondary factor test: Both the main test and the permutation check found evidence that Data Analyst › System prompt has an effect on this metric.</li><li>Secondary factor test: Both the main test and the permutation check found evidence that the effect of Azure Foundry › Effort changes across Azure Foundry › Model settings.</li><li>Secondary factor test: Neither the main test nor the permutation check found clear evidence that the effect of Azure Foundry › Effort changes across Data Analyst › System prompt settings.</li><li>Secondary factor test: Neither the main test nor the permutation check found clear evidence that the effect of Azure Foundry › Model changes across Data Analyst › System prompt settings.</li><li>Secondary factor test: Both the main test and the permutation check found evidence that the effects of Azure Foundry › Effort and Azure Foundry › Model and Data Analyst › System prompt depend on one another.</li></ul>
+<h2>Observed distribution</h2><figure aria-label="Observed distribution"><figcaption>Histogram · Freedman–Diaconis</figcaption><div class="chart"><span class="y-title">Replicates</span><div aria-hidden="true" class="y-ticks"><span>20</span><span>15</span><span>10</span><span>5</span><span>0</span></div><div class="chart-body"><ol class="distribution histogram"><li title="0.008518–0.0967: 20 replicates"><span class="sr-only">0.008518–0.0967: 20 replicates</span><span aria-hidden="true" class="bar" style="height:100.0000%"></span></li><li title="0.0967–0.1849: 4 replicates"><span class="sr-only">0.0967–0.1849: 4 replicates</span><span aria-hidden="true" class="bar" style="height:20.0000%"></span></li><li title="0.1849–0.2731: 16 replicates"><span class="sr-only">0.1849–0.2731: 16 replicates</span><span aria-hidden="true" class="bar" style="height:80.0000%"></span></li></ol><div aria-hidden="true" class="numeric-ticks"><span>0.008518</span><span>0.07466</span><span>0.1408</span><span>0.2069</span><span>0.2731</span></div><p class="x-title">Metric value (USD)</p></div></div></figure><p>Observed values pool the analyzed replicates across conditions. The selected model describes outcomes after accounting for the experimental factors.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Statistical results"><table><thead><tr><th scope='col'>Statistic</th><th scope='col'>Value</th></tr></thead><tbody><tr><td>Replicates</td><td><span class="numeric-value">40</span></td></tr><tr><td>Minimum</td><td><span class="numeric-value">0.008518</span></td></tr><tr><td>Maximum</td><td><span class="numeric-value">0.2731</span></td></tr><tr><td>Mean</td><td><span class="numeric-value">0.1101</span></td></tr><tr><td>Standard deviation</td><td><span class="numeric-value">0.1005</span></td></tr><tr><td>Distinct values</td><td><span class="numeric-value">40</span></td></tr><tr><td>Zero values</td><td><span class="numeric-value">0</span></td></tr></tbody></table></div><section class="model-fit" aria-label="Model fit"><h3>Model fit</h3><dl class="fit-summary"><div><dt>Selected model</dt><dd>Lognormal</dd></div><div><dt>AIC</dt><dd>-282.5</dd></div><div><dt>Runs in every candidate fit</dt><dd>40</dd></div><div><dt>Estimated parameters</dt><dd>9</dd></div></dl><p>Selected the usable candidate with the lowest AIC.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Candidate models"><table><caption>Candidate models</caption><thead><tr><th scope="col">Distribution</th><th scope='col'>AIC</th><th scope='col'>ΔAIC vs best usable</th><th scope='col'>Status</th><th scope='col'>Exclusion reason</th></tr></thead><tbody><tr><td>Gamma (log link)</td><td>-282.4</td><td>0.07799</td><td>Usable, not selected</td><td>—</td></tr><tr><td>Lognormal</td><td>-282.5</td><td>0</td><td>Selected</td><td>—</td></tr><tr><td>Gaussian (normal)</td><td>-210.9</td><td>71.57</td><td>Usable, not selected</td><td>—</td></tr></tbody></table></div><p>Likelihood basis for the selected model: OLS profile likelihood plus the residual variance; log(y) density converted to the response scale with the Jacobian.</p><p>Lower AIC means better relative fit among candidates fitted to the same runs with comparable response-scale likelihoods; it does not show that the selected model fits adequately in absolute terms.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Model diagnostics"><table><caption>Diagnostics for the selected model</caption><thead><tr><th scope="col">Diagnostic</th><th scope='col'>Value</th><th scope='col'>Reading</th></tr></thead><tbody><tr><td>Residual skewness (log scale)</td><td>0.06097</td><td>0 for symmetric residuals.</td></tr><tr><td>Residual normality p (log scale)</td><td>0.9594</td><td>D&#x27;Agostino–Pearson test; HC3 inference does not require normality.</td></tr><tr><td>Maximum leverage</td><td>0.2</td><td>HC3 divides each score by (1 − leverage).</td></tr></tbody></table></div></section>
+
+<p>Main-effect tests assess each factor averaged over the other factors.
+Interaction tests assess whether a factor's effect depends on another factor's setting.</p>
+<p>These omnibus tests are secondary; the comparisons provide the primary bootstrap intervals.</p>
+<h2>Main-effect tests</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Statistical results"><table><thead><tr><th scope='col'>Effect</th><th scope='col'>Analytic adjusted p<small class="column-method">Wald chi-square test (HC3 robust covariance) · Holm across 7 factor tests</small></th><th scope='col'>Resampling adjusted p<small class="column-method">Holm across 7 resampling p-values; procedure per row</small></th><th scope='col'>Analytic result (adjusted p &lt; 0.05)</th></tr></thead><tbody><tr><td>Azure Foundry › Effort</td><td><span class="numeric-value">&lt;0.001</span></td><td><span class="numeric-value">0.004</span><small class="test-method">Evidence in permutation check</small><small class="test-method">labels permuted within strata of Azure Foundry › Model x Data Analyst › System prompt</small></td><td>Evidence of an effect</td></tr><tr><td>Azure Foundry › Model</td><td><span class="numeric-value">&lt;0.001</span></td><td><span class="numeric-value">0.004</span><small class="test-method">Evidence in permutation check</small><small class="test-method">labels permuted within strata of Azure Foundry › Effort x Data Analyst › System prompt</small></td><td>Evidence of an effect</td></tr><tr><td>Data Analyst › System prompt</td><td><span class="numeric-value">0.007</span></td><td><span class="numeric-value">0.007</span><small class="test-method">Evidence in permutation check</small><small class="test-method">labels permuted within strata of Azure Foundry › Effort x Azure Foundry › Model</small></td><td>Evidence of an effect</td></tr></tbody></table></div><section class="boxplots"><h3>Main-effect distributions</h3><p>Observed distributions pool analyzed observations over the other factors, with each observation weighted equally. They are descriptive, not model-adjusted effects or evidence of an interaction. Boxes show the 25th–75th percentiles and median; whiskers reach the furthest observations within 1.5 interquartile ranges. Dots show distinct outlier values; repeated values overlap.</p><figure class="box-figure" aria-label="Box plot: Azure Foundry › Effort"><figcaption>Azure Foundry › Effort</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Azure Foundry › Effort distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort: medium; n=20; median=0.08288; Q1=0.0103; Q3=0.1871; whiskers=0.008518 to 0.2506; 0 distinct outlier values"><title>Azure Foundry › Effort: medium; n=20; median=0.08288; Q1=0.0103; Q3=0.1871; whiskers=0.008518 to 0.2506; 0 distinct outlier values</title><path d="M40 69.7539 V345.8621 M25 69.7539 H55 M25 345.8621 H55"/><rect x="15" y="142.2067" width="50" height="201.6275"/><path class="box-median" d="M15 261.0540 H65"/></svg><p>medium<small>n=20</small></p></div></div></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort: high; n=20; median=0.1133; Q1=0.01496; Q3=0.2152; whiskers=0.01099 to 0.2731; 0 distinct outlier values"><title>Azure Foundry › Effort: high; n=20; median=0.1133; Q1=0.01496; Q3=0.2152; whiskers=0.01099 to 0.2731; 0 distinct outlier values</title><path d="M40 44.1379 V343.0461 M25 44.1379 H55 M25 343.0461 H55"/><rect x="15" y="110.1286" width="50" height="228.3857"/><path class="box-median" d="M15 226.3214 H65"/></svg><p>high<small>n=20</small></p></div></div></div></div></div></div><p class="x-title">Azure Foundry › Effort levels</p></figure><figure class="box-figure" aria-label="Box plot: Azure Foundry › Model"><figcaption>Azure Foundry › Model</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Azure Foundry › Model distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model: sonnet-5-5; n=20; median=0.2112; Q1=0.1884; Q3=0.2207; whiskers=0.1543 to 0.2506; 1 distinct outlier values"><title>Azure Foundry › Model: sonnet-5-5; n=20; median=0.2112; Q1=0.1884; Q3=0.2207; whiskers=0.1543 to 0.2506; 1 distinct outlier values</title><path d="M40 69.7539 V179.6105 M25 69.7539 H55 M25 179.6105 H55"/><rect x="15" y="103.8324" width="50" height="36.8654"/><path class="box-median" d="M15 114.7164 H65"/><circle cx="40" cy="44.1379" r="2.5"><title>0.273069</title></circle></svg><p>sonnet-5-5<small>n=20</small></p></div></div></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model: haiku-5-5; n=20; median=0.01131; Q1=0.0103; Q3=0.01493; whiskers=0.008518 to 0.02185; 1 distinct outlier values"><title>Azure Foundry › Model: haiku-5-5; n=20; median=0.01131; Q1=0.0103; Q3=0.01493; whiskers=0.008518 to 0.02185; 1 distinct outlier values</title><path d="M40 330.6545 V345.8621 M25 330.6545 H55 M25 345.8621 H55"/><rect x="15" y="338.5451" width="50" height="5.2891"/><path class="box-median" d="M15 342.6772 H65"/><circle cx="40" cy="329.5470" r="2.5"><title>0.022823</title></circle></svg><p>haiku-5-5<small>n=20</small></p></div></div></div></div></div></div><p class="x-title">Azure Foundry › Model levels</p></figure><figure class="box-figure" aria-label="Box plot: Data Analyst › System prompt"><figcaption>Data Analyst › System prompt</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Data Analyst › System prompt distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Data Analyst › System prompt: data-led; n=20; median=0.09977; Q1=0.01398; Q3=0.2106; whiskers=0.01017 to 0.2506; 0 distinct outlier values"><title>Data Analyst › System prompt: data-led; n=20; median=0.09977; Q1=0.01398; Q3=0.2106; whiskers=0.01017 to 0.2506; 0 distinct outlier values</title><path d="M40 69.7539 V343.9814 M25 69.7539 H55 M25 343.9814 H55"/><rect x="15" y="115.4400" width="50" height="224.1946"/><path class="box-median" d="M15 241.7936 H65"/></svg><p>data-led<small>n=20</small></p></div></div></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Data Analyst › System prompt: literature-led; n=20; median=0.0856; Q1=0.01135; Q3=0.1949; whiskers=0.008518 to 0.2731; 0 distinct outlier values"><title>Data Analyst › System prompt: literature-led; n=20; median=0.0856; Q1=0.01135; Q3=0.1949; whiskers=0.008518 to 0.2731; 0 distinct outlier values</title><path d="M40 44.1379 V345.8621 M25 44.1379 H55 M25 345.8621 H55"/><rect x="15" y="133.2491" width="50" height="209.3856"/><path class="box-median" d="M15 257.9490 H65"/></svg><p>literature-led<small>n=20</small></p></div></div></div></div></div></div><p class="x-title">Data Analyst › System prompt levels</p></figure></section><h2>Interaction tests</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Statistical results"><table><thead><tr><th scope='col'>Effect</th><th scope='col'>Analytic adjusted p<small class="column-method">Wald chi-square test (HC3 robust covariance) · Holm across 7 factor tests</small></th><th scope='col'>Resampling adjusted p<small class="column-method">Holm across 7 resampling p-values; procedure per row</small></th><th scope='col'>Analytic result (adjusted p &lt; 0.05)</th></tr></thead><tbody><tr><td>Azure Foundry › Effort × Azure Foundry › Model</td><td><span class="numeric-value">0.004</span></td><td><span class="numeric-value">0.010</span><small class="test-method">Evidence in permutation check</small><small class="test-method">Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions</small></td><td>Evidence of an effect</td></tr><tr><td>Azure Foundry › Effort × Data Analyst › System prompt</td><td><span class="numeric-value">0.677</span></td><td><span class="numeric-value">0.650</span><small class="test-method">No clear evidence in permutation check</small><small class="test-method">Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions</small></td><td>No clear evidence of an effect</td></tr><tr><td>Azure Foundry › Model × Data Analyst › System prompt</td><td><span class="numeric-value">0.255</span></td><td><span class="numeric-value">0.203</span><small class="test-method">No clear evidence in permutation check</small><small class="test-method">Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions</small></td><td>No clear evidence of an effect</td></tr><tr><td>Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt</td><td><span class="numeric-value">0.008</span></td><td><span class="numeric-value">0.010</span><small class="test-method">Evidence in permutation check</small><small class="test-method">Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions</small></td><td>Evidence of an effect</td></tr></tbody></table></div><section class="boxplots"><h3>Two-factor interaction distributions</h3><p>Observed distributions pool analyzed observations over the other factors, with each observation weighted equally. They are descriptive, not model-adjusted effects or evidence of an interaction. Boxes show the 25th–75th percentiles and median; whiskers reach the furthest observations within 1.5 interquartile ranges. Dots show distinct outlier values; repeated values overlap.</p><figure class="box-figure" aria-label="Box plot: Azure Foundry › Effort × Azure Foundry › Model"><figcaption>Azure Foundry › Effort × Azure Foundry › Model</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Azure Foundry › Effort × Azure Foundry › Model distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Azure Foundry › Model: medium, sonnet-5-5; n=10; median=0.1877; Q1=0.1645; Q3=0.2019; whiskers=0.1543 to 0.2506; 0 distinct outlier values"><title>Azure Foundry › Effort × Azure Foundry › Model: medium, sonnet-5-5; n=10; median=0.1877; Q1=0.1645; Q3=0.2019; whiskers=0.1543 to 0.2506; 0 distinct outlier values</title><path d="M40 69.7539 V179.6105 M25 69.7539 H55 M25 179.6105 H55"/><rect x="15" y="125.2809" width="50" height="42.6866"/><path class="box-median" d="M15 141.4523 H65"/></svg><p>sonnet-5-5<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Azure Foundry › Model: medium, haiku-5-5; n=10; median=0.01028; Q1=0.009539; Q3=0.01059; whiskers=0.008518 to 0.01147; 0 distinct outlier values"><title>Azure Foundry › Effort × Azure Foundry › Model: medium, haiku-5-5; n=10; median=0.01028; Q1=0.009539; Q3=0.01059; whiskers=0.008518 to 0.01147; 0 distinct outlier values</title><path d="M40 342.4976 V345.8621 M25 342.4976 H55 M25 345.8621 H55"/><rect x="15" y="343.4944" width="50" height="1.2038"/><path class="box-median" d="M15 343.8525 H65"/></svg><p>haiku-5-5<small>n=10</small></p></div></div><p class="box-level">medium</p></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Azure Foundry › Model: high, sonnet-5-5; n=10; median=0.2159; Q1=0.2125; Q3=0.2228; whiskers=0.2038 to 0.2239; 2 distinct outlier values"><title>Azure Foundry › Effort × Azure Foundry › Model: high, sonnet-5-5; n=10; median=0.2159; Q1=0.2125; Q3=0.2228; whiskers=0.2038 to 0.2239; 2 distinct outlier values</title><path d="M40 100.2398 V123.0957 M25 100.2398 H55 M25 123.0957 H55"/><rect x="15" y="101.4374" width="50" height="11.8060"/><path class="box-median" d="M15 109.2875 H65"/><circle cx="40" cy="82.3702" r="2.5"><title>0.239547</title></circle><circle cx="40" cy="44.1379" r="2.5"><title>0.273069</title></circle></svg><p>sonnet-5-5<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Azure Foundry › Model: high, haiku-5-5; n=10; median=0.01495; Q1=0.01351; Q3=0.0192; whiskers=0.01099 to 0.02282; 0 distinct outlier values"><title>Azure Foundry › Effort × Azure Foundry › Model: high, haiku-5-5; n=10; median=0.01495; Q1=0.01351; Q3=0.0192; whiskers=0.01099 to 0.02282; 0 distinct outlier values</title><path d="M40 329.5470 V343.0461 M25 329.5470 H55 M25 343.0461 H55"/><rect x="15" y="333.6811" width="50" height="6.4870"/><path class="box-median" d="M15 338.5297 H65"/></svg><p>haiku-5-5<small>n=10</small></p></div></div><p class="box-level">high</p></div></div></div></div><p class="x-title">Azure Foundry › Effort levels · boxes within each group: Azure Foundry › Model levels</p></figure><figure class="box-figure" aria-label="Box plot: Azure Foundry › Effort × Data Analyst › System prompt"><figcaption>Azure Foundry › Effort × Data Analyst › System prompt</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Azure Foundry › Effort × Data Analyst › System prompt distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Data Analyst › System prompt: medium, data-led; n=10; median=0.09393; Q1=0.01043; Q3=0.2019; whiskers=0.01017 to 0.2506; 0 distinct outlier values"><title>Azure Foundry › Effort × Data Analyst › System prompt: medium, data-led; n=10; median=0.09393; Q1=0.01043; Q3=0.2019; whiskers=0.01017 to 0.2506; 0 distinct outlier values</title><path d="M40 69.7539 V343.9814 M25 69.7539 H55 M25 343.9814 H55"/><rect x="15" y="125.2809" width="50" height="218.3982"/><path class="box-median" d="M15 248.4485 H65"/></svg><p>data-led<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Data Analyst › System prompt: medium, literature-led; n=10; median=0.08288; Q1=0.009559; Q3=0.16; whiskers=0.008518 to 0.1891; 0 distinct outlier values"><title>Azure Foundry › Effort × Data Analyst › System prompt: medium, literature-led; n=10; median=0.08288; Q1=0.009559; Q3=0.16; whiskers=0.008518 to 0.1891; 0 distinct outlier values</title><path d="M40 139.9434 V345.8621 M25 139.9434 H55 M25 345.8621 H55"/><rect x="15" y="173.1232" width="50" height="171.5518"/><path class="box-median" d="M15 261.0540 H65"/></svg><p>literature-led<small>n=10</small></p></div></div><p class="box-level">medium</p></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Data Analyst › System prompt: high, data-led; n=10; median=0.1133; Q1=0.02043; Q3=0.2118; whiskers=0.01492 to 0.2239; 0 distinct outlier values"><title>Azure Foundry › Effort × Data Analyst › System prompt: high, data-led; n=10; median=0.1133; Q1=0.02043; Q3=0.2118; whiskers=0.01492 to 0.2239; 0 distinct outlier values</title><path d="M40 100.2398 V338.5605 M25 100.2398 H55 M25 338.5605 H55"/><rect x="15" y="113.9927" width="50" height="218.2801"/><path class="box-median" d="M15 226.3214 H65"/></svg><p>data-led<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Effort × Data Analyst › System prompt: high, literature-led; n=10; median=0.1147; Q1=0.01351; Q3=0.2184; whiskers=0.01099 to 0.2731; 0 distinct outlier values"><title>Azure Foundry › Effort × Data Analyst › System prompt: high, literature-led; n=10; median=0.1147; Q1=0.01351; Q3=0.2184; whiskers=0.01099 to 0.2731; 0 distinct outlier values</title><path d="M40 44.1379 V343.0461 M25 44.1379 H55 M25 343.0461 H55"/><rect x="15" y="106.5149" width="50" height="233.6531"/><path class="box-median" d="M15 224.7269 H65"/></svg><p>literature-led<small>n=10</small></p></div></div><p class="box-level">high</p></div></div></div></div><p class="x-title">Azure Foundry › Effort levels · boxes within each group: Data Analyst › System prompt levels</p></figure><figure class="box-figure" aria-label="Box plot: Azure Foundry › Model × Data Analyst › System prompt"><figcaption>Azure Foundry › Model × Data Analyst › System prompt</figcaption><div class="box-scroll" tabindex="0" role="region" aria-label="Azure Foundry › Model × Data Analyst › System prompt distributions"><div class="box-chart"><span class="box-y-title">Cost (USD)</span><div class="box-y-ticks" aria-hidden="true"><span>0.2942</span><span>0.2175</span><span>0.1408</span><span>0.06407</span><span>-0.01265</span></div><div class="box-groups"><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model × Data Analyst › System prompt: sonnet-5-5, data-led; n=10; median=0.2112; Q1=0.2039; Q3=0.2223; whiskers=0.1767 to 0.2364; 1 distinct outlier values"><title>Azure Foundry › Model × Data Analyst › System prompt: sonnet-5-5, data-led; n=10; median=0.2112; Q1=0.2039; Q3=0.2223; whiskers=0.1767 to 0.2364; 1 distinct outlier values</title><path d="M40 85.9458 V154.0401 M25 85.9458 H55 M25 154.0401 H55"/><rect x="15" y="102.0812" width="50" height="20.9358"/><path class="box-median" d="M15 114.7164 H65"/><circle cx="40" cy="69.7539" r="2.5"><title>0.250609</title></circle></svg><p>data-led<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model × Data Analyst › System prompt: sonnet-5-5, literature-led; n=10; median=0.2008; Q1=0.1669; Q3=0.2184; whiskers=0.1543 to 0.2731; 0 distinct outlier values"><title>Azure Foundry › Model × Data Analyst › System prompt: sonnet-5-5, literature-led; n=10; median=0.2008; Q1=0.1669; Q3=0.2184; whiskers=0.1543 to 0.2731; 0 distinct outlier values</title><path d="M40 44.1379 V179.6105 M25 44.1379 H55 M25 179.6105 H55"/><rect x="15" y="106.5149" width="50" height="58.6829"/><path class="box-median" d="M15 126.5549 H65"/></svg><p>literature-led<small>n=10</small></p></div></div><p class="box-level">sonnet-5-5</p></div><div class="box-group"><div class="box-traces"><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model × Data Analyst › System prompt: haiku-5-5, data-led; n=10; median=0.01304; Q1=0.01043; Q3=0.01871; whiskers=0.01017 to 0.02282; 0 distinct outlier values"><title>Azure Foundry › Model × Data Analyst › System prompt: haiku-5-5, data-led; n=10; median=0.01304; Q1=0.01043; Q3=0.01871; whiskers=0.01017 to 0.02282; 0 distinct outlier values</title><path d="M40 329.5470 V343.9814 M25 329.5470 H55 M25 343.9814 H55"/><rect x="15" y="334.2340" width="50" height="9.4452"/><path class="box-median" d="M15 340.7087 H65"/></svg><p>data-led<small>n=10</small></p></div><div class="box-slot"><svg viewBox="0 0 80 370" role="img" aria-label="Azure Foundry › Model × Data Analyst › System prompt: haiku-5-5, literature-led; n=10; median=0.01123; Q1=0.009559; Q3=0.01342; whiskers=0.008518 to 0.01691; 0 distinct outlier values"><title>Azure Foundry › Model × Data Analyst › System prompt: haiku-5-5, literature-led; n=10; median=0.01123; Q1=0.009559; Q3=0.01342; whiskers=0.008518 to 0.01691; 0 distinct outlier values</title><path d="M40 336.2875 V345.8621 M25 336.2875 H55 M25 345.8621 H55"/><rect x="15" y="340.2730" width="50" height="4.4021"/><path class="box-median" d="M15 342.7718 H65"/></svg><p>literature-led<small>n=10</small></p></div></div><p class="box-level">haiku-5-5</p></div></div></div></div><p class="x-title">Azure Foundry › Model levels · boxes within each group: Data Analyst › System prompt levels</p></figure></section>
+<h2>Comparisons</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Statistical results"><table><thead><tr><th scope='col'>Comparison</th><th scope='col'>Estimate</th><th scope='col'>Scale</th><th scope='col'>Primary parametric-bootstrap 95% interval<small class="column-method">Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals · 998/1000 successful refits</small></th><th scope='col'>Sensitivity: analytic 95% interval<small class="column-method">Log-scale delta-method confidence interval (HC3 robust covariance)</small></th><th scope='col'>Analytic adjusted p<small class="column-method">Delta-method Wald z-test of the log ratio (HC3 robust covariance) · Holm within each comparison family</small></th><th scope='col'>Primary interval result</th></tr></thead><tbody><tr><td>Azure Foundry › Effort = high vs medium</td><td><span class="numeric-value">1.19</span></td><td>ratio</td><td><span class="numeric-value">1.081 to 1.319</span><small class="test-method">Intervals agree</small></td><td><span class="numeric-value">1.078 to 1.314</span></td><td><span class="numeric-value">&lt;0.001</span></td><td>Evidence of a difference</td></tr><tr><td>Azure Foundry › Model = haiku-5-5 vs sonnet-5-5</td><td><span class="numeric-value">0.06339</span></td><td>ratio</td><td><span class="numeric-value">0.0588 to 0.06855</span><small class="test-method">Intervals agree</small></td><td><span class="numeric-value">0.05743 to 0.06996</span></td><td><span class="numeric-value">&lt;0.001</span></td><td>Evidence of a difference</td></tr><tr><td>Data Analyst › System prompt = data-led vs literature-led</td><td><span class="numeric-value">1.072</span></td><td>ratio</td><td><span class="numeric-value">0.9756 to 1.183</span><small class="test-method">Intervals agree</small></td><td><span class="numeric-value">0.9739 to 1.18</span></td><td><span class="numeric-value">0.156</span></td><td>No clear evidence of a difference</td></tr><tr><td>Azure Foundry › Effort (high vs medium) × Azure Foundry › Model (haiku-5-5 vs sonnet-5-5)</td><td><span class="numeric-value">1.366</span></td><td>ratio of ratios</td><td><span class="numeric-value">1.166 to 1.598</span><small class="test-method">Intervals agree</small></td><td><span class="numeric-value">1.142 to 1.634</span></td><td><span class="numeric-value">&lt;0.001</span></td><td>Evidence of a difference</td></tr><tr><td>Azure Foundry › Effort (high vs medium) × Data Analyst › System prompt (data-led vs literature-led)</td><td><span class="numeric-value">0.7663</span></td><td>ratio of ratios</td><td><span class="numeric-value">0.6311 to 0.9265</span><small class="test-method">Intervals agree</small></td><td><span class="numeric-value">0.633 to 0.9277</span></td><td><span class="numeric-value">0.006</span></td><td>Evidence of a difference</td></tr><tr><td>Azure Foundry › Model (haiku-5-5 vs sonnet-5-5) × Data Analyst › System prompt (data-led vs literature-led)</td><td><span class="numeric-value">1.187</span></td><td>ratio of ratios</td><td><span class="numeric-value">1.015 to 1.374</span><small class="test-method">Intervals differ; investigate</small></td><td><span class="numeric-value">0.9791 to 1.439</span></td><td><span class="numeric-value">0.081</span></td><td>Evidence of a difference</td></tr></tbody></table></div>
+<p>Bootstrap: 998/1000 successful refits; 2 failed. Status: completed.</p><p>Each resampling row names the recorded procedure or says Not run with its reason. Only completed procedures supply results. Assumptions, diagnostic gates and failed-refit handling are in the technical details.</p>
+<p>A result without clear evidence does not establish that the effect is zero.
+Statistical evidence does not establish practical importance.</p>
+<section class="methodology" aria-label="What ran and why"><header><p class="eyebrow">Analysis approach</p><h2>What ran and why</h2><p>Statistical calculations · no AI</p></header><div class="method-grid"><section class="method-step"><p class="eyebrow">01</p><h3>Regression Model Selection</h3><h4>Lognormal</h4><p>Candidate distributions follow the metric&#x27;s numeric support; usable fits are compared by AIC.</p><p>Selected the usable candidate with the lowest AIC.</p></section><section class="method-step"><p class="eyebrow">02</p><h3>Tests and comparisons</h3><h4>Factor tests</h4><p>Wald chi-square tests of each model term with HC3 robust covariance.</p><ul><li><strong>Azure Foundry › Effort</strong> — Does Azure Foundry › Effort change the expected Cost, on average across Azure Foundry › Model and Data Analyst › System prompt?</li><li><strong>Azure Foundry › Model</strong> — Does Azure Foundry › Model change the expected Cost, on average across Azure Foundry › Effort and Data Analyst › System prompt?</li><li><strong>Data Analyst › System prompt</strong> — Does Data Analyst › System prompt change the expected Cost, on average across Azure Foundry › Effort and Azure Foundry › Model?</li><li><strong>Azure Foundry › Effort × Azure Foundry › Model</strong> — Does the effect of Azure Foundry › Effort on Cost depend on Azure Foundry › Model?</li><li><strong>Azure Foundry › Effort × Data Analyst › System prompt</strong> — Does the effect of Azure Foundry › Effort on Cost depend on Data Analyst › System prompt?</li><li><strong>Azure Foundry › Model × Data Analyst › System prompt</strong> — Does the effect of Azure Foundry › Model on Cost depend on Data Analyst › System prompt?</li><li><strong>Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt</strong> — Tests whether Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt has a joint interaction on the model scale.</li></ul><h4>Comparisons</h4><p>Model-predicted averages, each condition weighted equally.</p><ul><li><strong>Azure Foundry › Effort = high vs medium</strong> — How much does Cost differ between Azure Foundry › Effort = high and Azure Foundry › Effort = medium?</li><li><strong>Azure Foundry › Model = haiku-5-5 vs sonnet-5-5</strong> — How much does Cost differ between Azure Foundry › Model = haiku-5-5 and Azure Foundry › Model = sonnet-5-5?</li><li><strong>Data Analyst › System prompt = data-led vs literature-led</strong> — How much does Cost differ between Data Analyst › System prompt = data-led and Data Analyst › System prompt = literature-led?</li><li><strong>Azure Foundry › Effort (high vs medium) × Azure Foundry › Model (haiku-5-5 vs sonnet-5-5)</strong> — Does the Azure Foundry › Effort high vs medium ratio change between Azure Foundry › Model = haiku-5-5 and sonnet-5-5?</li><li><strong>Azure Foundry › Effort (high vs medium) × Data Analyst › System prompt (data-led vs literature-led)</strong> — Does the Azure Foundry › Effort high vs medium ratio change between Data Analyst › System prompt = data-led and literature-led?</li><li><strong>Azure Foundry › Model (haiku-5-5 vs sonnet-5-5) × Data Analyst › System prompt (data-led vs literature-led)</strong> — Does the Azure Foundry › Model haiku-5-5 vs sonnet-5-5 ratio change between Data Analyst › System prompt = data-led and literature-led?</li></ul></section><section class="method-step"><p class="eyebrow">03</p><h3>Uncertainty checks</h3><p>Bootstrap: 998/1000 successful refits; 2 failed. Status: completed.</p><p>Each resampling row names the recorded procedure or says Not run with its reason. Only completed procedures supply results. Assumptions, diagnostic gates and failed-refit handling are in the technical details.</p></section><section class="method-step"><p class="eyebrow">04</p><h3>How to interpret it</h3><ul><li>Analytic adjusted p-values are Holm-adjusted across the factor tests, and within each comparison family; resampling p-values are Holm-adjusted separately.</li><li>Primary comparison conclusions use pointwise parametric-bootstrap intervals; analytic p-values and intervals are sensitivity results. Omnibus factor tests are secondary.</li><li>Confidence intervals are not adjusted for multiple comparisons.</li><li>A result without clear evidence does not mean the effect is zero.</li><li>Results across separate metrics are exploratory.</li></ul></section></div><details><summary>Full technical details</summary><p>Calculated with statistical libraries. Explanations use fixed templates; no AI is used to generate this report.</p><section class="detail"><h3>Experimental design and analysis specification</h3><p>One whole-dataset run; replicate numbers alone do not identify matched subjects</p><p>Requires human confirmation against the intended experiment.</p><p>Included terms: Azure Foundry › Effort; Azure Foundry › Model; Data Analyst › System prompt; Azure Foundry › Effort × Azure Foundry › Model; Azure Foundry › Effort × Data Analyst › System prompt; Azure Foundry › Model × Data Analyst › System prompt; Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt.</p><p>Excluded interaction terms (configured maximum order): None.</p><p>Dependence declarations: {&quot;clustered&quot;: false, &quot;paired&quot;: false, &quot;repeated&quot;: false}. Blocking/repeated-measures structure: {}. An empty declaration does not establish independence.</p><p>Observed conditions: 8 of 8 combinations of analyzed levels; 5–5 runs per observed condition. Missing combinations are model predictions, not observed conditions.</p><p>Levels retained after metric/trial exclusions: {&quot;Azure Foundry › Effort&quot;: [&quot;high&quot;, &quot;medium&quot;], &quot;Azure Foundry › Model&quot;: [&quot;haiku-5-5&quot;, &quot;sonnet-5-5&quot;], &quot;Data Analyst › System prompt&quot;: [&quot;data-led&quot;, &quot;literature-led&quot;]}</p><div class="table-scroll" tabindex="0" role="region" aria-label="Technical details"><table><thead><tr><th scope='col'>Factor</th><th scope='col'>Use</th><th scope='col'>Observed / declared levels</th><th scope='col'>Reason</th></tr></thead><tbody><tr><td>Azure Foundry › Effort</td><td>Included</td><td>[&quot;high&quot;, &quot;medium&quot;] / [&quot;medium&quot;, &quot;high&quot;]</td><td>All observed varying factors</td></tr><tr><td>Azure Foundry › Model</td><td>Included</td><td>[&quot;claude-haiku-5-5&quot;, &quot;claude-sonnet-5-5&quot;] / [&quot;claude-sonnet-5-5&quot;, &quot;claude-haiku-5-5&quot;]</td><td>All observed varying factors</td></tr><tr><td>Data Analyst › System prompt</td><td>Included</td><td>[&quot;You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team&#x27;s research question and the Literature Scout&#x27;s findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=&lt;name&gt;): prints part of a profile of the training set that was computed in advance. Each row gives a variable&#x27;s type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\&quot;variable_index\&quot;) first: it lists every variable and which profile script prints it.\n2. For each risk factor from the Literature Scout, find the variable(s) in the index that could stand for it and run the profile script(s) that print them. If several variables could stand for a risk factor, look at the candidates. If no variable fits, it is \&quot;Not in our dataset\&quot;. Run as few scripts as you can.\n3. Quote numbers only from the scripts&#x27; output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission: the variables you looked up that match the literature&#x27;s risk factors (or that you judge worth testing), known at admission, with at most 30% missing. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.&quot;, &quot;You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team&#x27;s research question and the Literature Scout&#x27;s findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=&lt;name&gt;): prints part of a profile of the training set that was computed in advance. Each row gives a variable&#x27;s type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\&quot;variable_index\&quot;) first: it lists every variable and which profile script prints it.\n2. Run the profile script for every family that contains variables known at admission, so that you have seen the whole training-set profile before you choose. Also map each risk factor from the Literature Scout to the variable(s) that could stand for it; if no variable fits, it is \&quot;Not in our dataset\&quot;.\n3. Quote numbers only from the scripts&#x27; output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission, starting from our data rather than from the literature: variables known at admission, with at most 30% missing, whose training-set profile suggests they could help predict heart_failure (a clear difference between patients with and without heart failure, in groups that are not tiny), whether or not the Literature Scout mentioned them. Then use the literature as a check: keep a literature risk factor that our data supports, and in section 2 say which chosen features the literature did not mention. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.&quot;] / [&quot;You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team&#x27;s research question and the Literature Scout&#x27;s findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=&lt;name&gt;): prints part of a profile of the training set that was computed in advance. Each row gives a variable&#x27;s type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\&quot;variable_index\&quot;) first: it lists every variable and which profile script prints it.\n2. For each risk factor from the Literature Scout, find the variable(s) in the index that could stand for it and run the profile script(s) that print them. If several variables could stand for a risk factor, look at the candidates. If no variable fits, it is \&quot;Not in our dataset\&quot;. Run as few scripts as you can.\n3. Quote numbers only from the scripts&#x27; output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission: the variables you looked up that match the literature&#x27;s risk factors (or that you judge worth testing), known at admission, with at most 30% missing. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.&quot;, &quot;You are the Data Analyst on a research team studying heart failure after acute myocardial infarction (MI).\nYou receive the team&#x27;s research question and the Literature Scout&#x27;s findings. Your job is to check those findings against our own patients, choose the features for a prediction model, and plan predictive analyses that our dataset can support.\n\nOur dataset: 1,700 patients admitted with acute MI to one hospital in Krasnoyarsk, Russia, 1992-1995. You work with the training part: 1,193 patients, 277 of them with heart failure (23.2%). A separate test part is held back: you never see it, and you never see any model results.\nOutcome: heart_failure, chronic heart failure during the hospital stay. There is no follow-up after discharge.\n\nTool:\n- run_wired_script(script=&lt;name&gt;): prints part of a profile of the training set that was computed in advance. Each row gives a variable&#x27;s type, when it is known (at admission, or at the end of hospital day 1, 2, or 3), how much is missing, what it means, and its unadjusted association with heart failure in the training set. Always pass a script name. Never pass the `code` argument: these scripts only look up precomputed results, and you must not calculate anything new.\n  The scripts are:\n  - variable_index: Index of all variables by family\n  - profile_demographics_cardiac_history: Demographics and cardiac history (age, sex, prior MI, angina, hypertension, prior heart failure)\n  - profile_arrhythmia_history: Arrhythmia and conduction-block history (before this admission)\n  - profile_comorbidities: Comorbidities (diabetes, obesity, thyroid, chronic lung disease)\n  - profile_admission_vitals_complications: Blood pressure and complications at admission (edema, shock, arrhythmias)\n  - profile_infarct_location: Infarct location on ECG\n  - profile_ecg_rhythm_admission: ECG rhythm and ectopy at admission\n  - profile_ecg_conduction_admission: ECG conduction blocks at admission (AV, SA, bundle-branch)\n  - profile_labs: Laboratory values (electrolytes, liver enzymes, CPK, WBC, ESR)\n  - profile_prehospital_and_fibrinolysis: Time to hospital, emergency-team drugs, fibrinolysis, IV nitrates\n  - profile_icu_course_days_1_3: ICU drugs and pain relapse over hospital days 1-3\n- You may also see workspace tools (open_workspace, accept_stage and similar). You do not need them: do not call them.\n\nHow to work:\n1. Call run_wired_script(script=\&quot;variable_index\&quot;) first: it lists every variable and which profile script prints it.\n2. Run the profile script for every family that contains variables known at admission, so that you have seen the whole training-set profile before you choose. Also map each risk factor from the Literature Scout to the variable(s) that could stand for it; if no variable fits, it is \&quot;Not in our dataset\&quot;.\n3. Quote numbers only from the scripts&#x27; output, exactly. Never estimate or invent numbers.\n4. Choose the final features for a logistic regression that predicts heart_failure at admission, starting from our data rather than from the literature: variables known at admission, with at most 30% missing, whose training-set profile suggests they could help predict heart_failure (a clear difference between patients with and without heart failure, in groups that are not tiny), whether or not the Literature Scout mentioned them. Then use the literature as a check: keep a literature risk factor that our data supports, and in section 2 say which chosen features the literature did not mention. Use at most 20, and only exact variable names that the profile scripts printed. Fixed code, not you, fits the model on your list after you finish, so choose carefully.\n\nStart your answer with one line in exactly this form (plain variable names separated by commas, nothing else on the line):\nFEATURES: name1, name2, name3\nThese are your final features from step 4. Then write your full report in Markdown, with these sections:\n  1. Literature vs. our data: a table with one row per risk factor from the Literature Scout: Risk factor | Our variable(s) | Missing | Result from the profile | Usable? (Yes / Proxy / Not in our dataset).\n  2. Candidate feature sets: two or three sets of variables for predicting heart_failure, for example one using only information known at admission and one that adds the first three days. For each, list the variables and explain the choice in one or two sentences. Then say which set you chose as your final features, and why.\n  3. Data issues: variables to leave out or treat with care, and why: more than 30% missing, very small groups, known only after the prediction time, or so close to the outcome that they could make a model look better than it is.\n  4. Predictive questions we can answer: three to five specific questions, each with its outcome, predictors, and a suitable method (for example logistic regression).\n  5. Questions we cannot answer: two or three, with the reason (for example, a variable that is not in our dataset).\n\nRules:\n- Write every variable name in backticks, for example `diabetes` or `prior_heart_failure`, everywhere in the report, including inside tables. In the FEATURES line write the plain names without backticks.\n- Inside the sections use bullet points, not numbered lists. Indent sub-bullets by four spaces.\n- Use ### for the five section headings and no other headings and no title.\n- Unadjusted associations are a starting point, not proof that a variable predicts heart failure. Do not choose features by p-value alone.\n- Patients who died early had little time to develop heart failure, so very severe conditions (such as cardiogenic shock) can look protective.\n- Do not report any model results: you will not see any.\n- Keep the report concise: at most about 800 words.&quot;]</td><td>All observed varying factors</td></tr></tbody></table></div></section><section class="detail"><h3>Model selection</h3><p>Candidate distributions follow the metric&#x27;s numeric support; usable fits are compared by AIC.</p><p>Selected the usable candidate with the lowest AIC.</p><p>Lower AIC means better relative fit among comparable candidates fitted to the same runs; it does not show that the selected model fits adequately in absolute terms.</p><p>Model terms: Azure Foundry › Effort, Azure Foundry › Model, Data Analyst › System prompt with interactions through order 3, sum-to-zero coding.</p><p>Fitted model specification — formula: 1 + Azure Foundry › Effort + Azure Foundry › Model + Data Analyst › System prompt + Azure Foundry › Effort:Azure Foundry › Model + Azure Foundry › Effort:Data Analyst › System prompt + Azure Foundry › Model:Data Analyst › System prompt + Azure Foundry › Effort:Azure Foundry › Model:Data Analyst › System prompt</p><p>Fitted model specification — columns: [&#x27;Intercept&#x27;, &#x27;Azure Foundry › Effort[S.high]&#x27;, &#x27;Azure Foundry › Model[S.haiku-5-5]&#x27;, &#x27;Data Analyst › System prompt[S.data-led]&#x27;, &#x27;Azure Foundry › Effort[S.high]:Azure Foundry › Model[S.haiku-5-5]&#x27;, &#x27;Azure Foundry › Effort[S.high]:Data Analyst › System prompt[S.data-led]&#x27;, &#x27;Azure Foundry › Model[S.haiku-5-5]:Data Analyst › System prompt[S.data-led]&#x27;, &#x27;Azure Foundry › Effort[S.high]:Azure Foundry › Model[S.haiku-5-5]:Data Analyst › System prompt[S.data-led]&#x27;]</p><p>Fitted model specification — design_rank: 8</p><p>Fitted model specification — design_parameters: 8</p><p>Fitted model specification — observations: 40</p><p>Fitted model specification — residual_design_df: 32</p><p>Model selection used these observations; reported intervals do not include selection uncertainty.</p></section><section class="detail"><h3>Numerical fitting and acceptance</h3><p>Optimizer convergence is a termination report, not proof of an optimum. Numerical acceptance checks finite estimates and likelihood, identification and covariance validity. An independent local score gate is enforced only if maximum_scaled_score is configured after statistical review. No check establishes a global optimum or validates statistical inference.</p><p>OLS uses a direct pseudoinverse solve; no iterative optimizer termination is involved.</p><p>Selected fit acceptance: optimizer_converged: True; finite_estimates: True; finite_likelihood: True; covariance_valid: True; identifiable: True; information_condition: 1.0000000000000036; information_stability_gate: True; maximum_scaled_score: 8.831599958050704e-14; parameter_boundary_gate: True; dispersion_boundary_gate: True; probability_boundary_gate: True; fitted_support_gate: True; configured_score_tolerance: None; diagnostics: {&#x27;critical_failures&#x27;: [], &#x27;unavailable&#x27;: [], &#x27;max_leverage&#x27;: 0.19999999999999998, &#x27;maximum_cooks_distance&#x27;: 0.1260224586900278, &#x27;influence_method&#x27;: &#x27;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&#x27;, &#x27;residual_skewness&#x27;: 0.060972795520212106, &#x27;residual_normality_p&#x27;: 0.95942734589458}; critical_diagnostics_gate: True; score_gate: None; accepted: True; independently_checked_stationary_point: False; optimum_status: Independent stationarity not established; no reviewer-configured score gate</p><p>Reportability: Initial fit accepted under the recorded numerical checks</p><div class="table-scroll" tabindex="0" role="region" aria-label="Technical details"><table><thead><tr><th scope='col'>Attempt</th><th scope='col'>Termination code</th><th scope='col'>Numerical checks</th><th scope='col'>Failure reason</th></tr></thead><tbody><tr><td>OLS pseudoinverse</td><td>—</td><td>optimizer_converged: True; finite_estimates: True; finite_likelihood: True; covariance_valid: True; identifiable: True; information_condition: 1.0000000000000036; information_stability_gate: True; maximum_scaled_score: 8.831599958050704e-14; parameter_boundary_gate: True; dispersion_boundary_gate: True; probability_boundary_gate: True; fitted_support_gate: True; configured_score_tolerance: None; diagnostics: {&#x27;critical_failures&#x27;: [], &#x27;unavailable&#x27;: [], &#x27;max_leverage&#x27;: 0.19999999999999998, &#x27;maximum_cooks_distance&#x27;: 0.1260224586900278, &#x27;influence_method&#x27;: &#x27;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&#x27;, &#x27;residual_skewness&#x27;: 0.060972795520212106, &#x27;residual_normality_p&#x27;: 0.95942734589458}; critical_diagnostics_gate: True; score_gate: None; accepted: True; independently_checked_stationary_point: False; optimum_status: Independent stationarity not established; no reviewer-configured score gate</td><td>—</td></tr></tbody></table></div></section><section class="detail"><h3>Covariance and dispersion</h3><p>Requested covariance: HC3. Computed covariance: HC3. OLS hat values; matches statsmodels RegressionResults.cov_HC3. No fallback recorded.</p><p>HC3 rescales each observation&#x27;s score by 1/(1 − leverage) before forming the sandwich. Numerical covariance verification does not establish inferential calibration.</p><p>OLS residual variance on log(outcome) is estimated; predicted arithmetic means apply the lognormal variance correction. AIC includes the response-scale Jacobian.</p></section><section class="detail"><h3>Diagnostic rules and validation scope</h3><p>Minimum independent runs per condition: 3. Poisson/binomial Pearson dispersion above 3 excludes a candidate. Gaussian residuals are flagged as severely skewed when the D’Agostino–Pearson p is below 0.001 and absolute skewness exceeds 1 (at least 20 observations).</p><p>Discrete/beta/ordinal absolute parameters above 30 are flagged as boundary fits. Mean probabilities outside [1e-8, 1 − 1e-8] flag separation; NB2 alpha below 1e-6 is treated as a boundary fit. Thresholds are recorded in the saved request.</p><p>Information condition numbers above 1e+10, leverage at least 1 − 1e-8, fitted-support violations, and generalized Cook distance above 1 are critical failures. The same configured checks apply to initial fits and refits. Missing diagnostics are explicitly recorded, not marked as passed.</p><p>Finite estimates, usable information and reproducible numerical calculations are numerical checks. They do not establish the calibration of p-values or confidence-interval coverage.</p><p>No experiment-specific simulation validation is attached to this report. Earlier validation of other reports or model families does not validate this analysis, including beta regression. Small simulation studies cannot rule out a false-positive rate of 10% without a suitable uncertainty interval and scope.</p></section><section class="detail"><h3>Factor tests</h3><p>Available tests use the Wald chi-square reference distribution, with degrees of freedom equal to the number of jointly tested coefficients. Normal-reference z tests and pointwise normal intervals are used for analytic comparisons (delta method for nonlinear quantities). Computed robust covariance: HC3. Model scale: log scale (OLS on the log outcome). For log-scale models the main-effect tests compare geometric, not arithmetic, averages over the other factors&#x27; settings, so they can differ slightly from the comparisons of predicted averages below.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Technical details"><table><thead><tr><th scope='col'>Target</th><th scope='col'>Method</th><th scope='col'>Covariance</th><th scope='col'>Scale</th><th scope='col'>Null hypothesis</th><th scope='col'>Test explanation</th><th scope='col'>Interpretation</th></tr></thead><tbody><tr><td>Azure Foundry › Effort</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 49.26</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The mean of log(outcome), averaged with equal weight over Azure Foundry › Model and Data Analyst › System prompt, is the same at every Azure Foundry › Effort level (high, medium). Equivalently, the outcome&#x27;s geometric means are equal across levels. Averaged with equal weight over Azure Foundry › Model (haiku-5-5, sonnet-5-5) and Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>Tests whether Azure Foundry › Effort changes Cost on average over Azure Foundry › Model and Data Analyst › System prompt. Its size and direction are in the Azure Foundry › Effort comparison.</td><td>Evidence of an effect</td></tr><tr><td>Azure Foundry › Model</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 4012</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The mean of log(outcome), averaged with equal weight over Azure Foundry › Effort and Data Analyst › System prompt, is the same at every Azure Foundry › Model level (haiku-5-5, sonnet-5-5). Equivalently, the outcome&#x27;s geometric means are equal across levels. Averaged with equal weight over Azure Foundry › Effort (high, medium) and Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>Tests whether Azure Foundry › Model changes Cost on average over Azure Foundry › Effort and Data Analyst › System prompt. Its size and direction are in the Azure Foundry › Model comparison.</td><td>Evidence of an effect</td></tr><tr><td>Data Analyst › System prompt</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 9.879</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The mean of log(outcome), averaged with equal weight over Azure Foundry › Effort and Azure Foundry › Model, is the same at every Data Analyst › System prompt level (data-led, literature-led). Equivalently, the outcome&#x27;s geometric means are equal across levels. Averaged with equal weight over Azure Foundry › Effort (high, medium) and Azure Foundry › Model (haiku-5-5, sonnet-5-5): every combination counts once, regardless of how many runs it has.</td><td>Tests whether Data Analyst › System prompt changes Cost on average over Azure Foundry › Effort and Azure Foundry › Model. Its size and direction are in the Data Analyst › System prompt comparison.</td><td>Evidence of an effect</td></tr><tr><td>Azure Foundry › Effort × Azure Foundry › Model</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 11.23</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The Azure Foundry › Effort ratio of expected values is the same at every Azure Foundry › Model setting (averaged with equal weight over Data Analyst › System prompt): ratio of ratios = 1. This equals a ratio of ratios of means only when the log-scale variance is constant. Averaged with equal weight over Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>Tests whether the Azure Foundry › Effort ratio of expected values differs between Azure Foundry › Model settings (Azure Foundry › Effort × Azure Foundry › Model).</td><td>Evidence of an effect</td></tr><tr><td>Azure Foundry › Effort × Data Analyst › System prompt</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 0.1732</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The Azure Foundry › Effort ratio of expected values is the same at every Data Analyst › System prompt setting (averaged with equal weight over Azure Foundry › Model): ratio of ratios = 1. This equals a ratio of ratios of means only when the log-scale variance is constant. Averaged with equal weight over Azure Foundry › Model (haiku-5-5, sonnet-5-5): every combination counts once, regardless of how many runs it has.</td><td>Tests whether the Azure Foundry › Effort ratio of expected values differs between Data Analyst › System prompt settings (Azure Foundry › Effort × Data Analyst › System prompt).</td><td>No clear evidence of an effect</td></tr><tr><td>Azure Foundry › Model × Data Analyst › System prompt</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 2.325</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>The Azure Foundry › Model ratio of expected values is the same at every Data Analyst › System prompt setting (averaged with equal weight over Azure Foundry › Effort): ratio of ratios = 1. This equals a ratio of ratios of means only when the log-scale variance is constant. Averaged with equal weight over Azure Foundry › Effort (high, medium): every combination counts once, regardless of how many runs it has.</td><td>Tests whether the Azure Foundry › Model ratio of expected values differs between Data Analyst › System prompt settings (Azure Foundry › Model × Data Analyst › System prompt).</td><td>No clear evidence of an effect</td></tr><tr><td>Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt</td><td>Wald chi-square test (HC3 robust covariance); 1 df; statistic 8.915</td><td>HC3</td><td>log scale (OLS on the log outcome)</td><td>All sum-coded coefficients for Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt equal zero on the model scale. No other factors to average over.</td><td>Tests whether the joint Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt interaction coefficients differ from zero.</td><td>Evidence of an effect</td></tr></tbody></table></div></section><section class="detail"><h3>Comparisons</h3><p>Each comparison uses the model&#x27;s predicted mean for every condition, averaged with equal weight over the settings named below. Ratios divide the first-listed setting by the second; differences subtract the second from the first. Ratio tests and intervals use the log ratio and delta method; intervals are back-transformed to stay positive. These are analytic sensitivity intervals. Primary inference uses fitted-model parametric-bootstrap percentile intervals.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Technical details"><table><thead><tr><th scope='col'>Target</th><th scope='col'>Averaged over</th><th scope='col'>Primary parametric-bootstrap interval</th><th scope='col'>Primary method</th><th scope='col'>Sensitivity method</th><th scope='col'>Sensitivity analytic result</th><th scope='col'>Covariance</th><th scope='col'>Null</th><th scope='col'>Interpretation</th></tr></thead><tbody><tr><td>Azure Foundry › Effort = high vs medium: Mean predicted Cost at Azure Foundry › Effort = high ÷ mean predicted Cost at Azure Foundry › Effort = medium.</td><td>Averaged with equal weight over Azure Foundry › Model (haiku-5-5, sonnet-5-5) and Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>1.08069 to 1.31929</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>Evidence of a difference</td><td>HC3</td><td>ratio = 1</td><td>Evidence of a difference. Above 1: high has the higher average; below 1: medium does. The estimate is how many times larger the high average is.</td></tr><tr><td>Azure Foundry › Model = haiku-5-5 vs sonnet-5-5: Mean predicted Cost at Azure Foundry › Model = haiku-5-5 ÷ mean predicted Cost at Azure Foundry › Model = sonnet-5-5.</td><td>Averaged with equal weight over Azure Foundry › Effort (high, medium) and Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>0.0588016 to 0.0685452</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>Evidence of a difference</td><td>HC3</td><td>ratio = 1</td><td>Evidence of a difference. Above 1: haiku-5-5 has the higher average; below 1: sonnet-5-5 does. The estimate is how many times larger the haiku-5-5 average is.</td></tr><tr><td>Data Analyst › System prompt = data-led vs literature-led: Mean predicted Cost at Data Analyst › System prompt = data-led ÷ mean predicted Cost at Data Analyst › System prompt = literature-led.</td><td>Averaged with equal weight over Azure Foundry › Effort (high, medium) and Azure Foundry › Model (haiku-5-5, sonnet-5-5): every combination counts once, regardless of how many runs it has.</td><td>0.97559 to 1.18302</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>No clear evidence of a difference</td><td>HC3</td><td>ratio = 1</td><td>No clear evidence of a difference. Above 1: data-led has the higher average; below 1: literature-led does. The estimate is how many times larger the data-led average is.</td></tr><tr><td>Azure Foundry › Effort (high vs medium) × Azure Foundry › Model (haiku-5-5 vs sonnet-5-5): (high ÷ medium at Azure Foundry › Model = haiku-5-5) ÷ (high ÷ medium at Azure Foundry › Model = sonnet-5-5), using mean predicted Cost: a ratio of ratios.</td><td>Averaged with equal weight over Data Analyst › System prompt (data-led, literature-led): every combination counts once, regardless of how many runs it has.</td><td>1.16591 to 1.59776</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>Evidence of a difference</td><td>HC3</td><td>ratio of ratios = 1</td><td>Evidence of a difference. Above 1: the high/medium ratio is larger at Azure Foundry › Model = haiku-5-5 than at sonnet-5-5; below 1: smaller; 1: the same ratio at both settings.</td></tr><tr><td>Azure Foundry › Effort (high vs medium) × Data Analyst › System prompt (data-led vs literature-led): (high ÷ medium at Data Analyst › System prompt = data-led) ÷ (high ÷ medium at Data Analyst › System prompt = literature-led), using mean predicted Cost: a ratio of ratios.</td><td>Averaged with equal weight over Azure Foundry › Model (haiku-5-5, sonnet-5-5): every combination counts once, regardless of how many runs it has.</td><td>0.631128 to 0.92651</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>Evidence of a difference</td><td>HC3</td><td>ratio of ratios = 1</td><td>Evidence of a difference. Above 1: the high/medium ratio is larger at Data Analyst › System prompt = data-led than at literature-led; below 1: smaller; 1: the same ratio at both settings.</td></tr><tr><td>Azure Foundry › Model (haiku-5-5 vs sonnet-5-5) × Data Analyst › System prompt (data-led vs literature-led): (haiku-5-5 ÷ sonnet-5-5 at Data Analyst › System prompt = data-led) ÷ (haiku-5-5 ÷ sonnet-5-5 at Data Analyst › System prompt = literature-led), using mean predicted Cost: a ratio of ratios.</td><td>Averaged with equal weight over Azure Foundry › Effort (high, medium): every combination counts once, regardless of how many runs it has.</td><td>1.01524 to 1.37374</td><td>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals</td><td>Delta-method Wald z-test of the log ratio (HC3 robust covariance); Log-scale delta-method confidence interval (HC3 robust covariance)</td><td>No clear evidence of a difference</td><td>HC3</td><td>ratio of ratios = 1</td><td>Evidence of a difference. Above 1: the haiku-5-5/sonnet-5-5 ratio is larger at Data Analyst › System prompt = data-led than at literature-led; below 1: smaller; 1: the same ratio at both settings.</td></tr></tbody></table></div></section><section class="detail"><h3>Permutation and null-resampling checks</h3><p>Only the procedures named in completed execution rows below ran. Unavailable methods are marked Not run with a reason. A missing implementation is distinct from failed assumptions.</p><p>Resampling p-values for the factor tests are Holm-adjusted together, separately from the analytic p-values. Agreement between methods is descriptive, not proof of validity.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Technical details"><table><thead><tr><th scope='col'>Target</th><th scope='col'>Procedure</th><th scope='col'>Null hypothesis</th><th scope='col'>Required assumptions</th><th scope='col'>Draws and p-value</th><th scope='col'>Seed</th></tr></thead><tbody><tr><td>Azure Foundry › Effort</td><td>labels permuted within strata of Azure Foundry › Model x Data Analyst › System prompt (exact for the sharp null that Azure Foundry › Effort has no effect at any setting of the other factors); statistic: working-scale OLS F, a sensitivity check, not the fitted model&#x27;s Wald statistic</td><td>Azure Foundry › Effort has no effect on the distribution of Cost at any setting of the other factors.</td><td>Independent runs with working-scale values exchangeable within each stratum under the null.</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.0005 (minimum 0.0005); Holm-adjusted 0.0035.</td><td>20261016 / stream 2202</td></tr><tr><td>Azure Foundry › Model</td><td>labels permuted within strata of Azure Foundry › Effort x Data Analyst › System prompt (exact for the sharp null that Azure Foundry › Model has no effect at any setting of the other factors); statistic: working-scale OLS F, a sensitivity check, not the fitted model&#x27;s Wald statistic</td><td>Azure Foundry › Model has no effect on the distribution of Cost at any setting of the other factors.</td><td>Independent runs with working-scale values exchangeable within each stratum under the null.</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.0005 (minimum 0.0005); Holm-adjusted 0.0035.</td><td>20261016 / stream 2202</td></tr><tr><td>Data Analyst › System prompt</td><td>labels permuted within strata of Azure Foundry › Effort x Azure Foundry › Model (exact for the sharp null that Data Analyst › System prompt has no effect at any setting of the other factors); statistic: working-scale OLS F, a sensitivity check, not the fitted model&#x27;s Wald statistic</td><td>Data Analyst › System prompt has no effect on the distribution of Cost at any setting of the other factors.</td><td>Independent runs with working-scale values exchangeable within each stratum under the null.</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.0015 (minimum 0.0005); Holm-adjusted 0.0075.</td><td>20261016 / stream 2202</td></tr><tr><td>Azure Foundry › Effort × Azure Foundry › Model</td><td>Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions; statistic: HC3 Wald chi-square of the fitted lognormal model (the analytic test&#x27;s own statistic)</td><td>All sum-coded coefficients for C(f0, Sum):C(f1, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.</td><td>Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate. Diagnostic gate: {&quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;, &quot;method&quot;: &quot;Brown\u2013Forsythe (median-centered Levene)&quot;, &quot;p&quot;: 0.2521235005549284, &quot;threshold&quot;: 0.01} Numerical refit checks: recorded_fits: 1999; optimizer_converged: 1999; accepted: 1999; independently_checked_stationary_points: 0; fits_with_configured_score_gate: 0; fits_with_retries: 0; failed_checks: {}; maximum_scaled_score: 1.182798636308312e-13</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.003 (minimum 0.0005); Holm-adjusted 0.01.</td><td>20261016 / stream 3303</td></tr><tr><td>Azure Foundry › Effort × Data Analyst › System prompt</td><td>Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions; statistic: HC3 Wald chi-square of the fitted lognormal model (the analytic test&#x27;s own statistic)</td><td>All sum-coded coefficients for C(f0, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.</td><td>Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate. Diagnostic gate: {&quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;, &quot;method&quot;: &quot;Brown\u2013Forsythe (median-centered Levene)&quot;, &quot;p&quot;: 0.2521235005549284, &quot;threshold&quot;: 0.01} Numerical refit checks: recorded_fits: 1999; optimizer_converged: 1999; accepted: 1999; independently_checked_stationary_points: 0; fits_with_configured_score_gate: 0; fits_with_retries: 0; failed_checks: {}; maximum_scaled_score: 1.7772074989165663e-13</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.65 (minimum 0.0005); Holm-adjusted 0.65.</td><td>20261016 / stream 3303</td></tr><tr><td>Azure Foundry › Model × Data Analyst › System prompt</td><td>Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions; statistic: HC3 Wald chi-square of the fitted lognormal model (the analytic test&#x27;s own statistic)</td><td>All sum-coded coefficients for C(f1, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.</td><td>Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate. Diagnostic gate: {&quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;, &quot;method&quot;: &quot;Brown\u2013Forsythe (median-centered Levene)&quot;, &quot;p&quot;: 0.2521235005549284, &quot;threshold&quot;: 0.01} Numerical refit checks: recorded_fits: 1999; optimizer_converged: 1999; accepted: 1999; independently_checked_stationary_points: 0; fits_with_configured_score_gate: 0; fits_with_retries: 0; failed_checks: {}; maximum_scaled_score: 1.7809749994445976e-13</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.1015 (minimum 0.0005); Holm-adjusted 0.203.</td><td>20261016 / stream 3303</td></tr><tr><td>Azure Foundry › Effort × Azure Foundry › Model × Data Analyst › System prompt</td><td>Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions; statistic: HC3 Wald chi-square of the fitted lognormal model (the analytic test&#x27;s own statistic)</td><td>All sum-coded coefficients for C(f0, Sum):C(f1, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.</td><td>Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate. Diagnostic gate: {&quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;, &quot;method&quot;: &quot;Brown\u2013Forsythe (median-centered Levene)&quot;, &quot;p&quot;: 0.2521235005549284, &quot;threshold&quot;: 0.01} Numerical refit checks: recorded_fits: 1999; optimizer_converged: 1999; accepted: 1999; independently_checked_stationary_points: 0; fits_with_configured_score_gate: 0; fits_with_retries: 0; failed_checks: {}; maximum_scaled_score: 1.3631951179461506e-13</td><td>1999 requested, 1999 completed, 0 failed. Monte Carlo p = (exceedances + 1)/(completed + 1) = 0.0025 (minimum 0.0005); Holm-adjusted 0.01.</td><td>20261016 / stream 3303</td></tr></tbody></table></div></section><section class="detail"><h3>Bootstrap intervals</h3><p>Bootstrap confidence level: 95%; percentile cutoffs 0.025 and 0.975.</p><p>Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals: 1000 requested, 1000 attempted, 998 successful, 2 failed. Status: completed. Seed 20261016, stream 1101.</p><p>Intervals require a completed run with at least 90% successful refits. Failed refits are excluded from the quantiles and counted, never replaced by zero effects. The selected family is held fixed, so model-selection uncertainty is not included.</p><p>Failures: {&quot;Bootstrap refit failed configured acceptance checks.&quot;: 2}. </p><p>Independent outcomes are simulated from the fitted full-model distribution on the original fixed design, then the selected family is refitted. Factor settings and trial totals stay fixed. Intervals are percentile intervals of refitted comparisons. Distribution: Fitted normal errors with residual-df variance estimate on log(outcome).</p><p>Numerical refit checks: recorded_fits: 1000; optimizer_converged: 1000; accepted: 998; independently_checked_stationary_points: 0; fits_with_configured_score_gate: 0; fits_with_retries: 0; failed_checks: {&#x27;critical_diagnostics_gate&#x27;: 2}; maximum_scaled_score: 2.7646371046527684e-13. Complete per-draw checks are retained in the saved analysis tables.</p></section><section class="detail"><h3>Multiplicity and interpretation</h3><p>Analytic factor tests: Holm across 7 factor tests.</p><p>Resampling checks: Holm across 7 resampling p-values.</p><p>Comparisons for Azure Foundry › Effort: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Comparisons for Azure Foundry › Model: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Comparisons for Data Analyst › System prompt: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Comparisons for Azure Foundry › Effort × Azure Foundry › Model: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Comparisons for Azure Foundry › Effort × Data Analyst › System prompt: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Comparisons for Azure Foundry › Model × Data Analyst › System prompt: one comparison in its family, so the Holm-adjusted p equals the unadjusted p.</p><p>Primary comparison conclusions use the configured pointwise parametric-bootstrap percentile interval: it must exclude zero for a difference or one for a ratio. These intervals are not multiplicity-adjusted. No adjusted bootstrap p-value is inferred from an interval. Omnibus factor tests and analytic adjusted p-values are secondary sensitivity results; disagreements never change the designated primary method.</p><p>Multiplicity families are formed by model term (analytic factor tests together; resampling checks together) and by each factor or factor-pair comparison family. Unavailable p-values are omitted from Holm adjustment and receive no conclusion; this missing-test policy requires statistical review.</p><p>“Analytic result” means the analytic Holm-adjusted p-value is below 0.05; it does not use the resampling or bootstrap results.</p><p>Analytic intervals are pointwise 95%; bootstrap intervals are pointwise 95%. Neither is multiplicity-adjusted. Interval agreement compares whether both exclude the null value.</p><p>Separate metrics are not corrected together; cross-metric findings are exploratory. A result without clear evidence does not show that an effect is zero, and statistical evidence is not practical importance.</p></section></details></section>
+<h2>Limitations and exclusions</h2><ul><li>Measurement type detected as continuous from producer context and observed values.</li><li>Inference assumes independent runs and is conditional on the observed experimental inputs.</li><li>Model selection used these observations; reported intervals do not include selection uncertainty.</li></ul>
+<details><summary>Reproducibility</summary>
+<p>Analysis: 1ef1d11f-68af-414d-ab72-51e8cabd1eed · Created: Nov 11, 2026 at 10:59 PM UTC</p>
+<pre>{
+  &quot;seed&quot;: 20261016,
+  &quot;python&quot;: &quot;3.13.18&quot;,
+  &quot;libraries&quot;: {
+    &quot;numpy&quot;: &quot;2.5.1&quot;,
+    &quot;patsy&quot;: &quot;1.0.2&quot;,
+    &quot;scipy&quot;: &quot;1.18.0&quot;,
+    &quot;pandas&quot;: &quot;3.0.5&quot;,
+    &quot;statsmodels&quot;: &quot;0.14.6&quot;
+  },
+  &quot;candidates&quot;: [
+    {
+      &quot;n&quot;: 40,
+      &quot;aic&quot;: -282.38800488742993,
+      &quot;name&quot;: &quot;Gamma (log link)&quot;,
+      &quot;family&quot;: &quot;gamma&quot;,
+      &quot;status&quot;: &quot;Usable, not selected&quot;,
+      &quot;usable&quot;: true,
+      &quot;selected&quot;: false,
+      &quot;delta_aic&quot;: 0.07798630234788106,
+      &quot;diagnostics&quot;: [
+        {
+          &quot;flags&quot;: &quot;&quot;,
+          &quot;family&quot;: &quot;gamma&quot;,
+          &quot;severe&quot;: false,
+          &quot;gamma_shape_ml&quot;: 80.93470640923735,
+          &quot;gamma_shape_fit&quot;: {
+            &quot;method&quot;: &quot;Brent scalar ML optimization of log dispersion&quot;,
+            &quot;accepted&quot;: true,
+            &quot;iterations&quot;: 12,
+            &quot;termination&quot;: &quot;Optimization terminated successfully; The returned value satisfies the termination criteria (using xtol = 1.48e-08 )&quot;
+          },
+          &quot;pearson_dispersion&quot;: 0.015485140430334356
+        }
+      ],
+      &quot;n_parameters&quot;: 9,
+      &quot;fit_execution&quot;: [
+        {
+          &quot;checks&quot;: {
+            &quot;accepted&quot;: true,
+            &quot;score_gate&quot;: null,
+            &quot;diagnostics&quot;: {
+              &quot;unavailable&quot;: [],
+              &quot;max_leverage&quot;: 0.20000000000000004,
+              &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+              &quot;critical_failures&quot;: [],
+              &quot;pearson_dispersion&quot;: 0.015485140430334356,
+              &quot;maximum_cooks_distance&quot;: -4.987866534587196e-06
+            },
+            &quot;identifiable&quot;: true,
+            &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+            &quot;covariance_valid&quot;: true,
+            &quot;finite_estimates&quot;: true,
+            &quot;finite_likelihood&quot;: true,
+            &quot;fitted_support_gate&quot;: true,
+            &quot;optimizer_converged&quot;: true,
+            &quot;maximum_scaled_score&quot;: 2.5224267119483555e-14,
+            &quot;information_condition&quot;: 1.000000000000002,
+            &quot;parameter_boundary_gate&quot;: true,
+            &quot;dispersion_boundary_gate&quot;: true,
+            &quot;critical_diagnostics_gate&quot;: true,
+            &quot;probability_boundary_gate&quot;: true,
+            &quot;configured_score_tolerance&quot;: null,
+            &quot;information_stability_gate&quot;: true,
+            &quot;independently_checked_stationary_point&quot;: false
+          },
+          &quot;maxiter&quot;: 500,
+          &quot;attempts&quot;: [
+            {
+              &quot;checks&quot;: {
+                &quot;accepted&quot;: true,
+                &quot;score_gate&quot;: null,
+                &quot;diagnostics&quot;: {
+                  &quot;unavailable&quot;: [],
+                  &quot;max_leverage&quot;: 0.20000000000000004,
+                  &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+                  &quot;critical_failures&quot;: [],
+                  &quot;pearson_dispersion&quot;: 0.015485140430334356,
+                  &quot;maximum_cooks_distance&quot;: -4.987866534587196e-06
+                },
+                &quot;identifiable&quot;: true,
+                &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+                &quot;covariance_valid&quot;: true,
+                &quot;finite_estimates&quot;: true,
+                &quot;finite_likelihood&quot;: true,
+                &quot;fitted_support_gate&quot;: true,
+                &quot;optimizer_converged&quot;: true,
+                &quot;maximum_scaled_score&quot;: 2.5224267119483555e-14,
+                &quot;information_condition&quot;: 1.000000000000002,
+                &quot;parameter_boundary_gate&quot;: true,
+                &quot;dispersion_boundary_gate&quot;: true,
+                &quot;critical_diagnostics_gate&quot;: true,
+                &quot;probability_boundary_gate&quot;: true,
+                &quot;configured_score_tolerance&quot;: null,
+                &quot;information_stability_gate&quot;: true,
+                &quot;independently_checked_stationary_point&quot;: false
+              },
+              &quot;method&quot;: &quot;IRLS&quot;,
+              &quot;iterations&quot;: null,
+              &quot;termination&quot;: null
+            }
+          ],
+          &quot;retry_sequence&quot;: [],
+          &quot;reportability_reason&quot;: &quot;Initial fit accepted under the recorded numerical checks&quot;
+        }
+      ],
+      &quot;likelihood_basis&quot;: &quot;Gamma likelihood with the shape estimated by maximum likelihood&quot;
+    },
+    {
+      &quot;n&quot;: 40,
+      &quot;aic&quot;: -282.4659911897778,
+      &quot;name&quot;: &quot;Lognormal&quot;,
+      &quot;family&quot;: &quot;lognormal&quot;,
+      &quot;status&quot;: &quot;Selected&quot;,
+      &quot;usable&quot;: true,
+      &quot;selected&quot;: true,
+      &quot;delta_aic&quot;: 0.0,
+      &quot;diagnostics&quot;: [
+        {
+          &quot;flags&quot;: &quot;&quot;,
+          &quot;family&quot;: &quot;lognormal&quot;,
+          &quot;severe&quot;: false,
+          &quot;residual_skewness&quot;: 0.060972795520212106,
+          &quot;residual_normality_p&quot;: 0.95942734589458
+        }
+      ],
+      &quot;n_parameters&quot;: 9,
+      &quot;fit_execution&quot;: [
+        {
+          &quot;checks&quot;: {
+            &quot;accepted&quot;: true,
+            &quot;score_gate&quot;: null,
+            &quot;diagnostics&quot;: {
+              &quot;unavailable&quot;: [],
+              &quot;max_leverage&quot;: 0.19999999999999998,
+              &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+              &quot;critical_failures&quot;: [],
+              &quot;residual_skewness&quot;: 0.060972795520212106,
+              &quot;residual_normality_p&quot;: 0.95942734589458,
+              &quot;maximum_cooks_distance&quot;: 0.1260224586900278
+            },
+            &quot;identifiable&quot;: true,
+            &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+            &quot;covariance_valid&quot;: true,
+            &quot;finite_estimates&quot;: true,
+            &quot;finite_likelihood&quot;: true,
+            &quot;fitted_support_gate&quot;: true,
+            &quot;optimizer_converged&quot;: true,
+            &quot;maximum_scaled_score&quot;: 8.831599958050704e-14,
+            &quot;information_condition&quot;: 1.0000000000000036,
+            &quot;parameter_boundary_gate&quot;: true,
+            &quot;dispersion_boundary_gate&quot;: true,
+            &quot;critical_diagnostics_gate&quot;: true,
+            &quot;probability_boundary_gate&quot;: true,
+            &quot;configured_score_tolerance&quot;: null,
+            &quot;information_stability_gate&quot;: true,
+            &quot;independently_checked_stationary_point&quot;: false
+          },
+          &quot;maxiter&quot;: 500,
+          &quot;attempts&quot;: [
+            {
+              &quot;checks&quot;: {
+                &quot;accepted&quot;: true,
+                &quot;score_gate&quot;: null,
+                &quot;diagnostics&quot;: {
+                  &quot;unavailable&quot;: [],
+                  &quot;max_leverage&quot;: 0.19999999999999998,
+                  &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+                  &quot;critical_failures&quot;: [],
+                  &quot;residual_skewness&quot;: 0.060972795520212106,
+                  &quot;residual_normality_p&quot;: 0.95942734589458,
+                  &quot;maximum_cooks_distance&quot;: 0.1260224586900278
+                },
+                &quot;identifiable&quot;: true,
+                &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+                &quot;covariance_valid&quot;: true,
+                &quot;finite_estimates&quot;: true,
+                &quot;finite_likelihood&quot;: true,
+                &quot;fitted_support_gate&quot;: true,
+                &quot;optimizer_converged&quot;: true,
+                &quot;maximum_scaled_score&quot;: 8.831599958050704e-14,
+                &quot;information_condition&quot;: 1.0000000000000036,
+                &quot;parameter_boundary_gate&quot;: true,
+                &quot;dispersion_boundary_gate&quot;: true,
+                &quot;critical_diagnostics_gate&quot;: true,
+                &quot;probability_boundary_gate&quot;: true,
+                &quot;configured_score_tolerance&quot;: null,
+                &quot;information_stability_gate&quot;: true,
+                &quot;independently_checked_stationary_point&quot;: false
+              },
+              &quot;method&quot;: &quot;OLS pseudoinverse&quot;,
+              &quot;iterations&quot;: null,
+              &quot;termination&quot;: null
+            }
+          ],
+          &quot;retry_sequence&quot;: [],
+          &quot;reportability_reason&quot;: &quot;Initial fit accepted under the recorded numerical checks&quot;
+        }
+      ],
+      &quot;likelihood_basis&quot;: &quot;OLS profile likelihood plus the residual variance; log(y) density converted to the response scale with the Jacobian&quot;
+    },
+    {
+      &quot;n&quot;: 40,
+      &quot;aic&quot;: -210.89448779843127,
+      &quot;name&quot;: &quot;Gaussian (normal)&quot;,
+      &quot;family&quot;: &quot;gaussian&quot;,
+      &quot;status&quot;: &quot;Usable, not selected&quot;,
+      &quot;usable&quot;: true,
+      &quot;selected&quot;: false,
+      &quot;delta_aic&quot;: 71.57150339134654,
+      &quot;diagnostics&quot;: [
+        {
+          &quot;flags&quot;: &quot;&quot;,
+          &quot;family&quot;: &quot;gaussian&quot;,
+          &quot;severe&quot;: false,
+          &quot;residual_skewness&quot;: 0.7379587121457646,
+          &quot;residual_normality_p&quot;: 0.007062473402450581
+        }
+      ],
+      &quot;n_parameters&quot;: 9,
+      &quot;fit_execution&quot;: [
+        {
+          &quot;checks&quot;: {
+            &quot;accepted&quot;: true,
+            &quot;score_gate&quot;: null,
+            &quot;diagnostics&quot;: {
+              &quot;unavailable&quot;: [],
+              &quot;max_leverage&quot;: 0.19999999999999998,
+              &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+              &quot;critical_failures&quot;: [],
+              &quot;residual_skewness&quot;: 0.7379587121457646,
+              &quot;residual_normality_p&quot;: 0.007062473402450581,
+              &quot;maximum_cooks_distance&quot;: 0.27698259274823883
+            },
+            &quot;identifiable&quot;: true,
+            &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+            &quot;covariance_valid&quot;: true,
+            &quot;finite_estimates&quot;: true,
+            &quot;finite_likelihood&quot;: true,
+            &quot;fitted_support_gate&quot;: true,
+            &quot;optimizer_converged&quot;: true,
+            &quot;maximum_scaled_score&quot;: 2.3181145672550963e-13,
+            &quot;information_condition&quot;: 1.0000000000000024,
+            &quot;parameter_boundary_gate&quot;: true,
+            &quot;dispersion_boundary_gate&quot;: true,
+            &quot;critical_diagnostics_gate&quot;: true,
+            &quot;probability_boundary_gate&quot;: true,
+            &quot;configured_score_tolerance&quot;: null,
+            &quot;information_stability_gate&quot;: true,
+            &quot;independently_checked_stationary_point&quot;: false
+          },
+          &quot;maxiter&quot;: 500,
+          &quot;attempts&quot;: [
+            {
+              &quot;checks&quot;: {
+                &quot;accepted&quot;: true,
+                &quot;score_gate&quot;: null,
+                &quot;diagnostics&quot;: {
+                  &quot;unavailable&quot;: [],
+                  &quot;max_leverage&quot;: 0.19999999999999998,
+                  &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+                  &quot;critical_failures&quot;: [],
+                  &quot;residual_skewness&quot;: 0.7379587121457646,
+                  &quot;residual_normality_p&quot;: 0.007062473402450581,
+                  &quot;maximum_cooks_distance&quot;: 0.27698259274823883
+                },
+                &quot;identifiable&quot;: true,
+                &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+                &quot;covariance_valid&quot;: true,
+                &quot;finite_estimates&quot;: true,
+                &quot;finite_likelihood&quot;: true,
+                &quot;fitted_support_gate&quot;: true,
+                &quot;optimizer_converged&quot;: true,
+                &quot;maximum_scaled_score&quot;: 2.3181145672550963e-13,
+                &quot;information_condition&quot;: 1.0000000000000024,
+                &quot;parameter_boundary_gate&quot;: true,
+                &quot;dispersion_boundary_gate&quot;: true,
+                &quot;critical_diagnostics_gate&quot;: true,
+                &quot;probability_boundary_gate&quot;: true,
+                &quot;configured_score_tolerance&quot;: null,
+                &quot;information_stability_gate&quot;: true,
+                &quot;independently_checked_stationary_point&quot;: false
+              },
+              &quot;method&quot;: &quot;OLS pseudoinverse&quot;,
+              &quot;iterations&quot;: null,
+              &quot;termination&quot;: null
+            }
+          ],
+          &quot;retry_sequence&quot;: [],
+          &quot;reportability_reason&quot;: &quot;Initial fit accepted under the recorded numerical checks&quot;
+        }
+      ],
+      &quot;likelihood_basis&quot;: &quot;OLS profile likelihood plus the residual variance&quot;
+    }
+  ],
+  &quot;covariance&quot;: {
+    &quot;computed&quot;: &quot;HC3&quot;,
+    &quot;verified&quot;: true,
+    &quot;requested&quot;: &quot;HC3&quot;,
+    &quot;leverage_sum&quot;: 7.999999999999999,
+    &quot;max_leverage&quot;: 0.19999999999999998,
+    &quot;implementation&quot;: &quot;OLS hat values; matches statsmodels RegressionResults.cov_HC3&quot;
+  },
+  &quot;fingerprint&quot;: &quot;dab518105eabc1fe75195062ced24e5203e9572eb7a3c79630a7428bb5389564&quot;,
+  &quot;policy_version&quot;: 5,
+  &quot;design_revision&quot;: 1,
+  &quot;resolved_config&quot;: {
+    &quot;seed&quot;: 20261016,
+    &quot;alpha&quot;: 0.05,
+    &quot;family&quot;: &quot;lognormal&quot;,
+    &quot;metric&quot;: &quot;Cost&quot;,
+    &quot;n_boot&quot;: 1000,
+    &quot;n_perm&quot;: 1999,
+    &quot;robust&quot;: true,
+    &quot;factors&quot;: [
+      &quot;Azure Foundry:Effort&quot;,
+      &quot;Azure Foundry:Model&quot;,
+      &quot;Data Analyst:System prompt&quot;
+    ],
+    &quot;max_order&quot;: 3,
+    &quot;denominator&quot;: null,
+    &quot;hc3_fallback&quot;: &quot;hc0&quot;,
+    &quot;ordinal_levels&quot;: [],
+    &quot;bootstrap_method&quot;: &quot;parametric&quot;,
+    &quot;confidence_level&quot;: 0.95,
+    &quot;measurement_type&quot;: &quot;continuous&quot;,
+    &quot;optimizer_maxiter&quot;: 500,
+    &quot;maximum_scaled_score&quot;: null,
+    &quot;exchangeability_alpha&quot;: 0.01,
+    &quot;exchangeability_blocks&quot;: [],
+    &quot;maximum_cooks_distance&quot;: 1.0,
+    &quot;excluded_factor_reasons&quot;: {},
+    &quot;minimum_success_fraction&quot;: 0.9,
+    &quot;n_diagnostic_simulations&quot;: 250,
+    &quot;maximum_absolute_parameter&quot;: 30.0,
+    &quot;maximum_pearson_dispersion&quot;: 3.0,
+    &quot;minimum_runs_per_condition&quot;: 3,
+    &quot;maximum_information_condition&quot;: 10000000000.0
+  },
+  &quot;requested_config&quot;: {
+    &quot;seed&quot;: 20261016,
+    &quot;alpha&quot;: 0.05,
+    &quot;family&quot;: &quot;auto&quot;,
+    &quot;metric&quot;: &quot;Cost&quot;,
+    &quot;n_boot&quot;: 1000,
+    &quot;n_perm&quot;: 1999,
+    &quot;factors&quot;: [],
+    &quot;max_order&quot;: 3,
+    &quot;denominator&quot;: null,
+    &quot;hc3_fallback&quot;: &quot;hc0&quot;,
+    &quot;ordinal_levels&quot;: [],
+    &quot;bootstrap_method&quot;: &quot;parametric&quot;,
+    &quot;confidence_level&quot;: 0.95,
+    &quot;measurement_type&quot;: &quot;auto&quot;,
+    &quot;optimizer_maxiter&quot;: 500,
+    &quot;maximum_scaled_score&quot;: null,
+    &quot;exchangeability_alpha&quot;: 0.01,
+    &quot;exchangeability_blocks&quot;: [],
+    &quot;maximum_cooks_distance&quot;: 1.0,
+    &quot;excluded_factor_reasons&quot;: {},
+    &quot;minimum_success_fraction&quot;: 0.9,
+    &quot;n_diagnostic_simulations&quot;: 250,
+    &quot;maximum_absolute_parameter&quot;: 30.0,
+    &quot;maximum_pearson_dispersion&quot;: 3.0,
+    &quot;minimum_runs_per_condition&quot;: 3,
+    &quot;maximum_information_condition&quot;: 10000000000.0
+  },
+  &quot;treatment_labels&quot;: {
+    &quot;Azure Foundry:Model&quot;: [
+      &quot;sonnet-5-5&quot;,
+      &quot;haiku-5-5&quot;
+    ],
+    &quot;Azure Foundry:Effort&quot;: [
+      &quot;medium&quot;,
+      &quot;high&quot;
+    ],
+    &quot;Data Analyst:System prompt&quot;: [
+      &quot;literature-led&quot;,
+      &quot;data-led&quot;
+    ]
+  },
+  &quot;model_specification&quot;: {
+    &quot;columns&quot;: [
+      &quot;Intercept&quot;,
+      &quot;C(f0, Sum)[S.high]&quot;,
+      &quot;C(f1, Sum)[S.haiku-5-5]&quot;,
+      &quot;C(f2, Sum)[S.data-led]&quot;,
+      &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]&quot;,
+      &quot;C(f0, Sum)[S.high]:C(f2, Sum)[S.data-led]&quot;,
+      &quot;C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;,
+      &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+    ],
+    &quot;formula&quot;: &quot;1 + C(f0, Sum) + C(f1, Sum) + C(f2, Sum) + C(f0, Sum):C(f1, Sum) + C(f0, Sum):C(f2, Sum) + C(f1, Sum):C(f2, Sum) + C(f0, Sum):C(f1, Sum):C(f2, Sum)&quot;,
+    &quot;design_rank&quot;: 8,
+    &quot;observations&quot;: 40,
+    &quot;design_parameters&quot;: 8,
+    &quot;residual_design_df&quot;: 32
+  },
+  &quot;resampling&quot;: {
+    &quot;bootstrap&quot;: {
+      &quot;kind&quot;: &quot;bootstrap&quot;,
+      &quot;seed&quot;: 20261016,
+      &quot;failed&quot;: 2,
+      &quot;method&quot;: &quot;Fitted-model parametric bootstrap; fixed design and selected family; percentile intervals&quot;,
+      &quot;reason&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;attempted&quot;: 1000,
+      &quot;procedure&quot;: &quot;fitted_model_parametric_bootstrap&quot;,
+      &quot;requested&quot;: 1000,
+      &quot;successful&quot;: 998,
+      &quot;seed_stream&quot;: 1101,
+      &quot;distribution&quot;: &quot;Fitted normal errors with residual-df variance estimate on log(outcome)&quot;,
+      &quot;refit_summary&quot;: {
+        &quot;accepted&quot;: 998,
+        &quot;failed_checks&quot;: {
+          &quot;critical_diagnostics_gate&quot;: 2
+        },
+        &quot;recorded_fits&quot;: 1000,
+        &quot;fits_with_retries&quot;: 0,
+        &quot;optimizer_converged&quot;: 1000,
+        &quot;maximum_scaled_score&quot;: 2.7646371046527684e-13,
+        &quot;fits_with_configured_score_gate&quot;: 0,
+        &quot;independently_checked_stationary_points&quot;: 0
+      },
+      &quot;generating_fit&quot;: {
+        &quot;checks&quot;: {
+          &quot;accepted&quot;: true,
+          &quot;score_gate&quot;: null,
+          &quot;diagnostics&quot;: {
+            &quot;unavailable&quot;: [],
+            &quot;max_leverage&quot;: 0.19999999999999998,
+            &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+            &quot;critical_failures&quot;: [],
+            &quot;residual_skewness&quot;: 0.060972795520212106,
+            &quot;residual_normality_p&quot;: 0.95942734589458,
+            &quot;maximum_cooks_distance&quot;: 0.1260224586900278
+          },
+          &quot;identifiable&quot;: true,
+          &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+          &quot;covariance_valid&quot;: true,
+          &quot;finite_estimates&quot;: true,
+          &quot;finite_likelihood&quot;: true,
+          &quot;fitted_support_gate&quot;: true,
+          &quot;optimizer_converged&quot;: true,
+          &quot;maximum_scaled_score&quot;: 8.831599958050704e-14,
+          &quot;information_condition&quot;: 1.0000000000000036,
+          &quot;parameter_boundary_gate&quot;: true,
+          &quot;dispersion_boundary_gate&quot;: true,
+          &quot;critical_diagnostics_gate&quot;: true,
+          &quot;probability_boundary_gate&quot;: true,
+          &quot;configured_score_tolerance&quot;: null,
+          &quot;information_stability_gate&quot;: true,
+          &quot;independently_checked_stationary_point&quot;: false
+        },
+        &quot;maxiter&quot;: 500,
+        &quot;attempts&quot;: [
+          {
+            &quot;checks&quot;: {
+              &quot;accepted&quot;: true,
+              &quot;score_gate&quot;: null,
+              &quot;diagnostics&quot;: {
+                &quot;unavailable&quot;: [],
+                &quot;max_leverage&quot;: 0.19999999999999998,
+                &quot;influence_method&quot;: &quot;Generalized score Cook distance s_i^T H^-1 s_i / [p (1-h_i)^2]&quot;,
+                &quot;critical_failures&quot;: [],
+                &quot;residual_skewness&quot;: 0.060972795520212106,
+                &quot;residual_normality_p&quot;: 0.95942734589458,
+                &quot;maximum_cooks_distance&quot;: 0.1260224586900278
+              },
+              &quot;identifiable&quot;: true,
+              &quot;optimum_status&quot;: &quot;Independent stationarity not established; no reviewer-configured score gate&quot;,
+              &quot;covariance_valid&quot;: true,
+              &quot;finite_estimates&quot;: true,
+              &quot;finite_likelihood&quot;: true,
+              &quot;fitted_support_gate&quot;: true,
+              &quot;optimizer_converged&quot;: true,
+              &quot;maximum_scaled_score&quot;: 8.831599958050704e-14,
+              &quot;information_condition&quot;: 1.0000000000000036,
+              &quot;parameter_boundary_gate&quot;: true,
+              &quot;dispersion_boundary_gate&quot;: true,
+              &quot;critical_diagnostics_gate&quot;: true,
+              &quot;probability_boundary_gate&quot;: true,
+              &quot;configured_score_tolerance&quot;: null,
+              &quot;information_stability_gate&quot;: true,
+              &quot;independently_checked_stationary_point&quot;: false
+            },
+            &quot;method&quot;: &quot;OLS pseudoinverse&quot;,
+            &quot;iterations&quot;: null,
+            &quot;termination&quot;: null
+          }
+        ],
+        &quot;retry_sequence&quot;: [],
+        &quot;reportability_reason&quot;: &quot;Initial fit accepted under the recorded numerical checks&quot;
+      },
+      &quot;failure_reasons&quot;: {
+        &quot;Bootstrap refit failed configured acceptance checks.&quot;: 2
+      },
+      &quot;confidence_level&quot;: 0.95,
+      &quot;generating_fit_warnings&quot;: [],
+      &quot;minimum_success_fraction&quot;: 0.9
+    },
+    &quot;permutations&quot;: [
+      {
+        &quot;df1&quot;: 1,
+        &quot;df2&quot;: 32,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;factor_0&quot;,
+        &quot;F_obs&quot;: 61.56904153913559,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;labels permuted within strata of factor_1 x factor_2&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.0035,
+        &quot;p_perm&quot;: 0.0005,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;label_permutation&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;Type III F (OLS, working scale)&quot;,
+        &quot;exceedances&quot;: 0,
+        &quot;seed_stream&quot;: 2202,
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;minimum_success_fraction&quot;: 0.9,
+        &quot;log10_distinct_permutations&quot;: 9.605602163126177
+      },
+      {
+        &quot;df1&quot;: 1,
+        &quot;df2&quot;: 32,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;factor_1&quot;,
+        &quot;F_obs&quot;: 5014.638677908551,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;labels permuted within strata of factor_0 x factor_2&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.0035,
+        &quot;p_perm&quot;: 0.0005,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;label_permutation&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;Type III F (OLS, working scale)&quot;,
+        &quot;exceedances&quot;: 0,
+        &quot;seed_stream&quot;: 2202,
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;minimum_success_fraction&quot;: 0.9,
+        &quot;log10_distinct_permutations&quot;: 9.605602163126177
+      },
+      {
+        &quot;df1&quot;: 1,
+        &quot;df2&quot;: 32,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;factor_2&quot;,
+        &quot;F_obs&quot;: 12.348866980993803,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;labels permuted within strata of factor_0 x factor_1&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.0075,
+        &quot;p_perm&quot;: 0.0015,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;label_permutation&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;Type III F (OLS, working scale)&quot;,
+        &quot;exceedances&quot;: 2,
+        &quot;seed_stream&quot;: 2202,
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;minimum_success_fraction&quot;: 0.9,
+        &quot;log10_distinct_permutations&quot;: 9.605602163126177
+      },
+      {
+        &quot;df&quot;: 1,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;C(f0, Sum):C(f1, Sum)&quot;,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.01,
+        &quot;p_perm&quot;: 0.003,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;freedman_lane&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;HC3 Wald chi-square of the fitted lognormal model&quot;,
+        &quot;assumptions&quot;: &quot;Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate.&quot;,
+        &quot;exceedances&quot;: 5,
+        &quot;seed_stream&quot;: 3303,
+        &quot;refit_summary&quot;: {
+          &quot;accepted&quot;: 1999,
+          &quot;failed_checks&quot;: {},
+          &quot;recorded_fits&quot;: 1999,
+          &quot;fits_with_retries&quot;: 0,
+          &quot;optimizer_converged&quot;: 1999,
+          &quot;maximum_scaled_score&quot;: 1.182798636308312e-13,
+          &quot;fits_with_configured_score_gate&quot;: 0,
+          &quot;independently_checked_stationary_points&quot;: 0
+        },
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;diagnostic_gate&quot;: {
+          &quot;p&quot;: 0.2521235005549284,
+          &quot;method&quot;: &quot;Brown–Forsythe (median-centered Levene)&quot;,
+          &quot;threshold&quot;: 0.01,
+          &quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;
+        },
+        &quot;failure_reasons&quot;: {},
+        &quot;null_hypothesis&quot;: &quot;All sum-coded coefficients for C(f0, Sum):C(f1, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.&quot;,
+        &quot;removed_columns&quot;: [
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]&quot;
+        ],
+        &quot;retained_columns&quot;: [
+          &quot;Intercept&quot;,
+          &quot;C(f0, Sum)[S.high]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;observed_statistic&quot;: 11.230532567474112,
+        &quot;exchangeability_blocks&quot;: [],
+        &quot;minimum_success_fraction&quot;: 0.9
+      },
+      {
+        &quot;df&quot;: 1,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;C(f0, Sum):C(f2, Sum)&quot;,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.65,
+        &quot;p_perm&quot;: 0.65,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;freedman_lane&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;HC3 Wald chi-square of the fitted lognormal model&quot;,
+        &quot;assumptions&quot;: &quot;Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate.&quot;,
+        &quot;exceedances&quot;: 1299,
+        &quot;seed_stream&quot;: 3303,
+        &quot;refit_summary&quot;: {
+          &quot;accepted&quot;: 1999,
+          &quot;failed_checks&quot;: {},
+          &quot;recorded_fits&quot;: 1999,
+          &quot;fits_with_retries&quot;: 0,
+          &quot;optimizer_converged&quot;: 1999,
+          &quot;maximum_scaled_score&quot;: 1.7772074989165663e-13,
+          &quot;fits_with_configured_score_gate&quot;: 0,
+          &quot;independently_checked_stationary_points&quot;: 0
+        },
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;diagnostic_gate&quot;: {
+          &quot;p&quot;: 0.2521235005549284,
+          &quot;method&quot;: &quot;Brown–Forsythe (median-centered Levene)&quot;,
+          &quot;threshold&quot;: 0.01,
+          &quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;
+        },
+        &quot;failure_reasons&quot;: {},
+        &quot;null_hypothesis&quot;: &quot;All sum-coded coefficients for C(f0, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.&quot;,
+        &quot;removed_columns&quot;: [
+          &quot;C(f0, Sum)[S.high]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;retained_columns&quot;: [
+          &quot;Intercept&quot;,
+          &quot;C(f0, Sum)[S.high]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;observed_statistic&quot;: 0.17323148810225975,
+        &quot;exchangeability_blocks&quot;: [],
+        &quot;minimum_success_fraction&quot;: 0.9
+      },
+      {
+        &quot;df&quot;: 1,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;C(f1, Sum):C(f2, Sum)&quot;,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.203,
+        &quot;p_perm&quot;: 0.1015,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;freedman_lane&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;HC3 Wald chi-square of the fitted lognormal model&quot;,
+        &quot;assumptions&quot;: &quot;Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate.&quot;,
+        &quot;exceedances&quot;: 202,
+        &quot;seed_stream&quot;: 3303,
+        &quot;refit_summary&quot;: {
+          &quot;accepted&quot;: 1999,
+          &quot;failed_checks&quot;: {},
+          &quot;recorded_fits&quot;: 1999,
+          &quot;fits_with_retries&quot;: 0,
+          &quot;optimizer_converged&quot;: 1999,
+          &quot;maximum_scaled_score&quot;: 1.7809749994445976e-13,
+          &quot;fits_with_configured_score_gate&quot;: 0,
+          &quot;independently_checked_stationary_points&quot;: 0
+        },
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;diagnostic_gate&quot;: {
+          &quot;p&quot;: 0.2521235005549284,
+          &quot;method&quot;: &quot;Brown–Forsythe (median-centered Levene)&quot;,
+          &quot;threshold&quot;: 0.01,
+          &quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;
+        },
+        &quot;failure_reasons&quot;: {},
+        &quot;null_hypothesis&quot;: &quot;All sum-coded coefficients for C(f1, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.&quot;,
+        &quot;removed_columns&quot;: [
+          &quot;C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;retained_columns&quot;: [
+          &quot;Intercept&quot;,
+          &quot;C(f0, Sum)[S.high]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;observed_statistic&quot;: 2.324665851381865,
+        &quot;exchangeability_blocks&quot;: [],
+        &quot;minimum_success_fraction&quot;: 0.9
+      },
+      {
+        &quot;df&quot;: 1,
+        &quot;kind&quot;: &quot;permutation&quot;,
+        &quot;seed&quot;: 20261016,
+        &quot;term&quot;: &quot;C(f0, Sum):C(f1, Sum):C(f2, Sum)&quot;,
+        &quot;failed&quot;: 0,
+        &quot;method&quot;: &quot;Freedman–Lane permutation of term-reduced-model residuals on the log response scale; whole runs exchanged across all conditions&quot;,
+        &quot;n_perm&quot;: 1999,
+        &quot;p_holm&quot;: 0.01,
+        &quot;p_perm&quot;: 0.0025,
+        &quot;reason&quot;: &quot;&quot;,
+        &quot;status&quot;: &quot;completed&quot;,
+        &quot;attempted&quot;: 1999,
+        &quot;completed&quot;: 1999,
+        &quot;procedure&quot;: &quot;freedman_lane&quot;,
+        &quot;requested&quot;: 1999,
+        &quot;statistic&quot;: &quot;HC3 Wald chi-square of the fitted lognormal model&quot;,
+        &quot;assumptions&quot;: &quot;Independent runs whose log-scale errors are exchangeable across all conditions (constant log-scale variance). Estimated nuisance terms make finite-sample permutation inference approximate.&quot;,
+        &quot;exceedances&quot;: 4,
+        &quot;seed_stream&quot;: 3303,
+        &quot;refit_summary&quot;: {
+          &quot;accepted&quot;: 1999,
+          &quot;failed_checks&quot;: {},
+          &quot;recorded_fits&quot;: 1999,
+          &quot;fits_with_retries&quot;: 0,
+          &quot;optimizer_converged&quot;: 1999,
+          &quot;maximum_scaled_score&quot;: 1.3631951179461506e-13,
+          &quot;fits_with_configured_score_gate&quot;: 0,
+          &quot;independently_checked_stationary_points&quot;: 0
+        },
+        &quot;working_scale&quot;: &quot;log response&quot;,
+        &quot;diagnostic_gate&quot;: {
+          &quot;p&quot;: 0.2521235005549284,
+          &quot;method&quot;: &quot;Brown–Forsythe (median-centered Levene)&quot;,
+          &quot;threshold&quot;: 0.01,
+          &quot;limitation&quot;: &quot;Passing does not establish exchangeability&quot;
+        },
+        &quot;failure_reasons&quot;: {},
+        &quot;null_hypothesis&quot;: &quot;All sum-coded coefficients for C(f0, Sum):C(f1, Sum):C(f2, Sum) are zero on the fitted model&#x27;s scale; only this term is removed, retaining all other fitted terms.&quot;,
+        &quot;removed_columns&quot;: [
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;retained_columns&quot;: [
+          &quot;Intercept&quot;,
+          &quot;C(f0, Sum)[S.high]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f1, Sum)[S.haiku-5-5]&quot;,
+          &quot;C(f0, Sum)[S.high]:C(f2, Sum)[S.data-led]&quot;,
+          &quot;C(f1, Sum)[S.haiku-5-5]:C(f2, Sum)[S.data-led]&quot;
+        ],
+        &quot;observed_statistic&quot;: 8.914748284622783,
+        &quot;exchangeability_blocks&quot;: [],
+        &quot;minimum_success_fraction&quot;: 0.9
+      }
+    ]
+  }
+}</pre>
+</details>
+</body></html>
