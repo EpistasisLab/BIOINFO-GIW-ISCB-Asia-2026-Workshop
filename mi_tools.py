@@ -1,6 +1,6 @@
 """Shared code for the agent modules: the MI data, four analysis tools, model setup, and run helpers.
 
-Used by 02_agent_design_patterns.ipynb and 03_multi_agent_langgraph.ipynb. The four tools (`list_variables`, `profile_data`, `compare_groups`,
+Used by 2b_agent_design_patterns.ipynb and 2c_multi_agent_langgraph.ipynb. The four tools (`list_variables`, `profile_data`, `compare_groups`,
 `train_model`) are ordinary Python functions that a LangChain agent can call. Their docstrings are what the
 model reads, so they say exactly what each tool returns.
 """
