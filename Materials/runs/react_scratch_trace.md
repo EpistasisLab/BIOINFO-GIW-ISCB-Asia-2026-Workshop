@@ -132,22 +132,24 @@ pentoxifylline_icu | binary | admission | 0.9% missing | Use of Trental (pentoxi
 
 ## 3. Model call (think)
 
-**Calls tool** `profile_data` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium']}`
+**Calls tool** `profile_data` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast']}`
 
 **Calls tool** `compare_groups` with `{'variable': 'pulmonary_edema_at_admission'}`
 
 **Calls tool** `compare_groups` with `{'variable': 'prior_heart_failure'}`
 
+**Calls tool** `compare_groups` with `{'variable': 'age'}`
+
 ## 4. Tool result: profile_data
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium']}`
+Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast']}`
 
 ````
 Patients: 1,700; heart failure events: 394 (23.2%).
-Predictors: 21 (24 model columns after encoding categorical variables).
+Predictors: 22 (25 model columns after encoding categorical variables).
 Known only after admission: none.
-Complete cases (no missing predictor): 784 patients, 189 events.
-Events per model column in complete cases: 7.9 (logistic regression usually needs about 10 or more).
+Complete cases (no missing predictor): 837 patients, 196 events.
+Events per model column in complete cases: 7.8 (logistic regression usually needs about 10 or more).
 Predictors with more than 30% missing: none.
 ````
 
@@ -176,127 +178,167 @@ prior_heart_failure: Presence of chronic heart failure in the anamnesis. Patient
 Chi-square test: p < 0.001.
 ````
 
-## 7. Model call (think)
+## 7. Tool result: compare_groups
 
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
-
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
-
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'systolic_bp_icu', 'anterior_mi', 'cardiogenic_shock_at_admission'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
-
-## 8. Tool result: train_model
-
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+Arguments: `{'variable': 'age'}`
 
 ````
-Model: penalized_logistic; missing data: impute; 21 predictors (24 model columns).
-Patients used: 1,700 of 1,700 (394 events; 16.4 events per column).
-5-fold cross-validation: AUC 0.718 ± 0.027, PR-AUC 0.520 ± 0.036 (a model with no skill scores 0.232), Brier 0.147 ± 0.006.
-L1 penalty kept 13 of 24 columns (strongest 15):
-  prior_heart_failure=1: OR 2.13 per 1 SD
-  age: OR 1.31 per 1 SD
-  cardiogenic_shock_at_admission: OR 0.80 per 1 SD
-  diabetes: OR 1.21 per 1 SD
-  atrial_fibrillation_at_admission: OR 1.16 per 1 SD
-  anterior_mi: OR 1.15 per 1 SD
-  prior_heart_failure=3: OR 1.03 per 1 SD
-  time_to_hospital: OR 0.98 per 1 SD
-  angina_functional_class: OR 0.98 per 1 SD
-  prior_heart_failure=4: OR 1.01 per 1 SD
-  systolic_bp_icu: OR 1.01 per 1 SD
-  prior_mi_count: OR 1.01 per 1 SD
-  serum_sodium: OR 1.00 per 1 SD
+age: Age of patient. Patients with data: 1,692 (8 missing, left out).
+Mean 64.85 with heart failure vs 60.95 without (p < 0.001, Welch t-test).
 ````
+
+## 8. Model call (think)
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'random_forest', 'missing_strategy': 'impute'}`
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'systolic_bp_icu', 'cardiogenic_shock_at_admission', 'anterior_mi'], 'model_type': 'logistic', 'missing_strategy': 'complete_case'}`
 
 ## 9. Tool result: train_model
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'ecg_rhythm_sinus_tachycardia', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
 
 ````
-Model: gradient_boosting; missing data: native; 21 predictors (24 model columns).
-Patients used: 1,700 of 1,700 (394 events; 16.4 events per column).
-5-fold cross-validation: AUC 0.703 ± 0.034, PR-AUC 0.506 ± 0.037 (a model with no skill scores 0.232), Brier 0.150 ± 0.006.
-Most important columns (mean drop in AUC when shuffled, first test fold):
-  prior_heart_failure=1: 0.113
-  age: 0.059
-  anterior_mi: 0.046
-  diabetes: 0.021
-  atrial_fibrillation_at_admission: 0.013
-  cardiogenic_shock_at_admission: 0.009
-  serum_potassium: 0.005
-  serum_sodium: 0.003
-  ecg_rhythm_sinus_tachycardia: 0.002
-  prior_heart_failure=3: 0.001
+Model: penalized_logistic; missing data: impute; 22 predictors (25 model columns).
+Patients used: 1,700 of 1,700 (394 events; 15.8 events per column).
+5-fold cross-validation: AUC 0.729 ± 0.031, PR-AUC 0.531 ± 0.038 (a model with no skill scores 0.232), Brier 0.146 ± 0.007.
+L1 penalty kept 16 of 25 columns (strongest 15):
+  prior_heart_failure=1: OR 2.15 per 1 SD
+  age: OR 1.34 per 1 SD
+  cardiogenic_shock_at_admission: OR 0.79 per 1 SD
+  diabetes: OR 1.21 per 1 SD
+  lateral_mi: OR 1.21 per 1 SD
+  atrial_fibrillation_at_admission: OR 1.16 per 1 SD
+  serum_ast: OR 1.09 per 1 SD
+  anterior_mi: OR 1.03 per 1 SD
+  prior_heart_failure=3: OR 1.03 per 1 SD
+  time_to_hospital: OR 0.98 per 1 SD
+  systolic_bp_icu: OR 1.02 per 1 SD
+  prior_mi_count: OR 1.01 per 1 SD
+  prior_heart_failure=4: OR 1.01 per 1 SD
+  posterior_mi: OR 1.01 per 1 SD
+  angina_functional_class: OR 0.99 per 1 SD
 ````
 
 ## 10. Tool result: train_model
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'diabetes', 'systolic_bp_icu', 'anterior_mi', 'cardiogenic_shock_at_admission'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
+Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
 
 ````
-Model: logistic; missing data: impute; 10 predictors (13 model columns).
-Patients used: 1,700 of 1,700 (394 events; 30.3 events per column).
-5-fold cross-validation: AUC 0.715 ± 0.043, PR-AUC 0.514 ± 0.046 (a model with no skill scores 0.232), Brier 0.148 ± 0.007.
+Model: gradient_boosting; missing data: native; 22 predictors (25 model columns).
+Patients used: 1,700 of 1,700 (394 events; 15.8 events per column).
+5-fold cross-validation: AUC 0.725 ± 0.033, PR-AUC 0.533 ± 0.037 (a model with no skill scores 0.232), Brier 0.147 ± 0.007.
+Most important columns (mean drop in AUC when shuffled, first test fold):
+  prior_heart_failure=1: 0.108
+  age: 0.060
+  lateral_mi: 0.035
+  anterior_mi: 0.010
+  atrial_fibrillation_at_admission: 0.008
+  cardiogenic_shock_at_admission: 0.005
+  white_blood_cell_count: 0.004
+  inferior_mi: 0.004
+  diabetes: 0.004
+  hypertension_stage: 0.003
+````
+
+## 11. Tool result: train_model
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'obesity', 'systolic_bp_icu', 'diastolic_bp_icu', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'lateral_mi', 'posterior_mi', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'esr', 'time_to_hospital', 'serum_ast'], 'model_type': 'random_forest', 'missing_strategy': 'impute'}`
+
+````
+Model: random_forest; missing data: impute; 22 predictors (25 model columns).
+Patients used: 1,700 of 1,700 (394 events; 15.8 events per column).
+5-fold cross-validation: AUC 0.715 ± 0.035, PR-AUC 0.512 ± 0.041 (a model with no skill scores 0.232), Brier 0.149 ± 0.006.
+Most important columns (mean drop in AUC when shuffled, first test fold):
+  prior_heart_failure=1: 0.110
+  lateral_mi: 0.036
+  age: 0.033
+  atrial_fibrillation_at_admission: 0.014
+  anterior_mi: 0.013
+  diabetes: 0.012
+  hypertension_stage: 0.011
+  prior_mi_count: 0.004
+  cardiogenic_shock_at_admission: 0.004
+  ecg_rhythm_sinus_tachycardia: 0.004
+````
+
+## 12. Tool result: train_model
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'prior_heart_failure', 'angina_functional_class', 'hypertension_stage', 'diabetes', 'systolic_bp_icu', 'cardiogenic_shock_at_admission', 'anterior_mi'], 'model_type': 'logistic', 'missing_strategy': 'complete_case'}`
+
+````
+Model: logistic; missing data: complete_case; 10 predictors (13 model columns).
+Patients used: 1,259 of 1,700 (285 events; 21.9 events per column).
+5-fold cross-validation: AUC 0.689 ± 0.041, PR-AUC 0.457 ± 0.038 (a model with no skill scores 0.226), Brier 0.154 ± 0.009.
 Adjusted odds ratios per 1-unit increase (15 smallest p-values):
-  prior_heart_failure=1: OR 28.80 (95% CI 15.75-52.67), p < 0.001
-  age: OR 1.03 (95% CI 1.02-1.04), p < 0.001
-  diabetes: OR 1.87 (95% CI 1.33-2.64), p < 0.001
-  anterior_mi: OR 1.12 (95% CI 1.04-1.20), p = 0.003
-  cardiogenic_shock_at_admission: OR 0.09 (95% CI 0.01-0.66), p = 0.018
-  prior_heart_failure=3: OR 1.65 (95% CI 0.72-3.78), p = 0.239
-  angina_functional_class: OR 0.92 (95% CI 0.81-1.05), p = 0.240
-  prior_heart_failure=4: OR 1.68 (95% CI 0.59-4.76), p = 0.331
-  prior_mi_count: OR 1.07 (95% CI 0.92-1.26), p = 0.379
-  systolic_bp_icu: OR 1.00 (95% CI 1.00-1.01), p = 0.619
-  hypertension_stage: OR 0.97 (95% CI 0.86-1.10), p = 0.669
-  sex: OR 0.95 (95% CI 0.71-1.26), p = 0.705
-  prior_heart_failure=2: OR 1.17 (95% CI 0.45-3.06), p = 0.747
+  prior_heart_failure=1: OR 21.88 (95% CI 10.45-45.81), p < 0.001
+  age: OR 1.04 (95% CI 1.02-1.05), p < 0.001
+  anterior_mi: OR 1.14 (95% CI 1.05-1.24), p = 0.002
+  diabetes: OR 1.64 (95% CI 1.10-2.43), p = 0.014
+  cardiogenic_shock_at_admission: OR 0.17 (95% CI 0.02-1.33), p = 0.091
+  angina_functional_class: OR 0.90 (95% CI 0.77-1.04), p = 0.155
+  prior_mi_count: OR 1.08 (95% CI 0.90-1.31), p = 0.399
+  prior_heart_failure=3: OR 1.48 (95% CI 0.54-4.01), p = 0.443
+  sex: OR 0.90 (95% CI 0.65-1.25), p = 0.522
+  prior_heart_failure=4: OR 1.27 (95% CI 0.35-4.53), p = 0.717
+  systolic_bp_icu: OR 1.00 (95% CI 0.99-1.00), p = 0.777
+  hypertension_stage: OR 1.01 (95% CI 0.87-1.17), p = 0.920
+  prior_heart_failure=2: OR 0.99 (95% CI 0.31-3.15), p = 0.984
 ````
 
-## 11. Model call (think)
+## 13. Model call (think)
 
 **Reply**
 
 ````
-**Recommendation:** use the 10-predictor logistic regression. It predicts only modestly (cross-validated AUC 0.715), and most of that comes from one variable, a history of stage I chronic heart failure.
+**Recommendation:** use the L1-penalized logistic regression with median imputation, fitted on all 1,700 patients. It predicts only modestly well (AUC 0.73), and the gradient boosting model did as well, so a more complex model buys nothing.
 
-**What I used**
-- I used variables known at admission only. That ruled out anything recorded later in the stay.
-- I left out ICU drug treatments. Who got a drug may reflect how sick the patient already was, which would distort the risk factors.
-- I left out variables that were mostly missing, such as family history (95.8% missing) and CPK (99.8% missing).
-- The 10 predictors were age, sex, prior MI count, angina functional class, hypertension stage, prior heart failure, diabetes, ICU systolic blood pressure, anterior MI, and cardiogenic shock at admission.
-- I filled in missing values with the median. A complete-case analysis would have kept only 784 patients, and the full 21-variable set would have had under 10 events per model column in that subset.
-- With all 1,700 patients and 394 events, the 10-predictor model has 30.3 events per column, which is enough for a stable logistic model.
+**Predictors.** I used 22 variables that are all known at admission, and nothing recorded later in the stay. They cover:
+- demographics and history: age, sex, prior MI count, prior heart failure, angina class, hypertension stage, diabetes and obesity;
+- admission status: ICU blood pressure, pulmonary edema, cardiogenic shock, atrial fibrillation and sinus tachycardia;
+- ECG infarct location: anterior, lateral, inferior and posterior;
+- labs and timing: white cell count, ESR, AST and time to hospital.
 
-**Model comparison (5-fold cross-validation)**
+I left out the 99.8%-missing CPK, the 96%-missing family history, and the sparse, near-duplicate ECG and fibrinolytic-drug flags.
 
-| Model | Predictors | AUC | PR-AUC | Brier |
-|---|---|---|---|---|
-| Logistic (recommended) | 10 | 0.715 ± 0.043 | 0.514 | 0.148 |
-| Penalized logistic | 21 | 0.718 ± 0.027 | 0.520 | 0.147 |
-| Gradient boosting | 21 | 0.703 ± 0.034 | 0.506 | 0.150 |
+**Why this model.**
+- With 394 events and about 25 model columns, there are 15.8 events per column. That is enough for a penalized model.
+- A plain logistic model needs complete cases. Dropping patients with any missing value cut the sample to 837 on the 22-variable set. With 10 predictors it still dropped 441 patients (1,259 of 1,700 used) and did worse.
+- Imputing the median keeps every patient. This could bias results if values are not missing at random, and I did not test that.
 
-- A model with no skill would score a PR-AUC of 0.232, so all three are clearly better than chance.
-- The three models are statistically indistinguishable. The 21-variable penalized model and the flexible gradient boosting model added nothing over the simple one, so I chose the simplest and most interpretable.
-- Discrimination is modest. The model can help sort patients by risk, but it is not accurate enough to decide care for an individual patient.
+**Cross-validated performance (5-fold).**
 
-**Risk factors (adjusted odds ratios, logistic model)**
-- **Stage I chronic heart failure in the history:** OR 28.80 (95% CI 15.75–52.67), p < 0.001. It is by far the strongest driver. In the raw data, 87.4% of these patients (90 of 103) developed heart failure, against 18.7% of those with no history.
-- **Age:** OR 1.03 per year (95% CI 1.02–1.04), p < 0.001.
-- **Diabetes:** OR 1.87 (95% CI 1.33–2.64), p < 0.001.
-- **Anterior MI:** OR 1.12 per ECG category step (95% CI 1.04–1.20), p = 0.003.
-- **Cardiogenic shock at admission:** OR 0.09 (95% CI 0.01–0.66), p = 0.018. The interval is very wide, so the estimate is unstable. It is probably a competing-risk effect, because patients in shock may die before heart failure is recorded. That explanation is my hypothesis and I haven't tested it.
-- The other predictors were not significant.
-- The gradient boosting model ranked the same variables as most important: prior heart failure, age, anterior MI, diabetes and atrial fibrillation at admission.
+| Model | AUC | PR-AUC | Brier |
+|---|---|---|---|
+| Penalized logistic, impute | 0.729 ± 0.031 | 0.531 ± 0.038 | 0.146 ± 0.007 |
+| Gradient boosting, native missing | 0.725 ± 0.033 | 0.533 ± 0.037 | 0.147 ± 0.007 |
+| Random forest, impute | 0.715 ± 0.035 | 0.512 ± 0.041 | 0.149 ± 0.006 |
+| Plain logistic, 10 predictors, complete case (1,259 patients) | 0.689 ± 0.041 | 0.457 ± 0.038 | 0.154 ± 0.009 |
 
-**Caveats**
-- **Other stages of prior heart failure:** the odds ratios for stages II and IIB (1.17 to 1.68) are imprecise because those groups are small (19 to 29 patients each).
-- **Pulmonary edema:** it was not associated with the outcome (24.5% vs 23.1%, p = 0.734).
-- **Single centre, 1992–1995:** the data come from one hospital and an older treatment era. The model needs external validation before any use.
-- **Associations only:** these are associations, not causal effects.
+- A model with no skill has a PR-AUC of about 0.23, so the best models are clearly better than chance. They are not strong enough to decide care for an individual patient.
+- The penalized logistic and gradient boosting results are within noise of each other.
+
+**Risk factors driving the model.**
+- **Prior chronic heart failure, stage I, is the dominant driver.** It had an odds ratio of 2.15 per SD in the penalized model. In the plain logistic model on 10 predictors it was 21.88 (95% CI 10.45–45.81). Unadjusted, 87.4% of these patients (90 of 103) had in-hospital heart failure, against 18.7% of those with no prior heart failure. The higher stages (II and IIB) were much weaker: 22–32% heart failure, on only 19–29 patients each.
+- **Age** raised risk, with an OR of 1.34 per SD. Patients with heart failure averaged 64.9 years versus 61.0 without.
+- **Lateral MI** extent, **diabetes** (OR 1.21 per SD in the penalized model, 1.64 in the plain logistic) and **atrial fibrillation at admission** (1.16) were the next strongest in the penalized model.
+- **Anterior MI** had a significant adjusted effect in the plain logistic model (OR 1.14 per 1-unit increase, p = 0.002).
+- **AST** (1.09 per SD) was a small contributor.
+- The remaining variables contributed little (odds ratios of 1.03 or less per SD, or shrunk out entirely by the penalty).
+- **Cardiogenic shock** came out protective (OR 0.79 per SD; 0.17 in the plain logistic, CI 0.02–1.33, p = 0.09). I would not interpret this as real. It is probably an artifact of few cases or of patients who died before heart failure could be recorded.
+- **Pulmonary edema at admission** showed no univariate association (24.5% versus 23.1%, p = 0.73).
+
+**Caveats.**
+- The stage I result is large and unusual, so check how "stage I" was coded and whether it overlaps with the outcome definition. The model leans heavily on this one variable.
+- The data come from one hospital in 1992–1995, so treatment and case mix differ from today. Validate the model externally before any use.
+- Cross-validation was run on the same data used to choose the predictors, so the AUC may be slightly optimistic.
+- The odds ratios are associations, not causal effects.
 ````
 
-## 12. Model call (answer)
+## 14. Model call (answer)
 
 **human message**
 
