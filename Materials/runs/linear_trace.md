@@ -7,7 +7,7 @@ Every model call and tool call in order. A prompt that repeats word for word (su
 **system message**
 
 ````
-You are the Literature Scout on a research team studying heart failure after acute myocardial infarction (MI). Today's date is 2026/11/16.
+You are the Literature Scout on a research team studying heart failure after acute myocardial infarction (MI). Today's date is 2026/11/17.
 Find what published studies say about risk factors for heart failure after MI.
 1. Turn the request into a short PubMed query without quotation marks, for example: Myocardial Infarction[MeSH] AND Heart Failure[MeSH]. Search with maxResults 10. Do not use dateRange unless the request names a time window; it then needs BOTH minDate and maxDate (YYYY/MM/DD).
 2. Fetch the 5 most relevant PMIDs in one call (fewer only if fewer are relevant). If a search returns fewer than 5 results, fix or broaden the query and search again.
@@ -20,19 +20,19 @@ Find what published studies say about risk factors for heart failure after MI.
 Which risk factors at admission predict in-hospital heart failure after a myocardial infarction, what does the published literature say about them, and how well can our data predict it? Build the best model our data can support.
 ````
 
-**Calls tool** `pubmed_search_articles` with `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND in-hospital AND admission', 'maxResults': 10, 'summaryCount': 10}`
+**Calls tool** `pubmed_search_articles` with `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND admission AND in-hospital', 'maxResults': 10, 'summaryCount': 10}`
 
 ## 2. Tool result: pubmed_search_articles
 
-Arguments: `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND in-hospital AND admission', 'maxResults': 10, 'summaryCount': 10}`
+Arguments: `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND admission AND in-hospital', 'maxResults': 10, 'summaryCount': 10}`
 
 ````
 ## PubMed Search Results
-**Query:** `Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND in-hospital AND admission`
+**Query:** `Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND admission AND in-hospital`
 **Returned:** 10 of 304 | **Offset:** 0
-**Search URL:** <https://pubmed.ncbi.nlm.nih.gov/?term=Myocardial%20Infarction%5BMeSH%5D%20AND%20Heart%20Failure%5BMeSH%5D%20AND%20risk%20factors%20AND%20in-hospital%20AND%20admission>
+**Search URL:** <https://pubmed.ncbi.nlm.nih.gov/?term=Myocardial%20Infarction%5BMeSH%5D%20AND%20Heart%20Failure%5BMeSH%5D%20AND%20risk%20factors%20AND%20admission%20AND%20in-hospital>
 
-**PMIDs:** 38587237, 9989963, 32692391, 34461040, 38685603, 36036480, 37716540, 37336310, 41632477, 37269688
+**PMIDs:** 38587237, 9989963, 32692391, 34461040, 38685603, 37716540, 37336310, 41632477, 37269688, 37979792
 
 ### Summaries
 
@@ -83,14 +83,6 @@ Arguments: `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND r
 **PubMed:** <https://pubmed.ncbi.nlm.nih.gov/38685603/>
 **PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC11287335/>
 
-#### Temporal trends in major cardiovascular events following first-time myocardial infarction in the reperfusion era - a Danish nationwide cohort study from 2000 to 2017.
-**PMID:** 36036480
-**Authors:** Ravn PB, Falkentoft AC, Garred CAH, et al.
-**Source:** Eur Heart J Qual Care Clin Outcomes
-**Published:** 2023-04-26
-**DOI:** 10.1093/ehjqcco/qcac033
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36036480/>
-
 #### Heart Failure at Admission Complicating ST-Elevation Myocardial Infarction in a Middle-Income Country. Experience of the ARGEN-IAM-ST Registry.
 **PMID:** 37716540
 **Authors:** Zoni CR, D'Imperio H, Zapata G, et al.
@@ -131,54 +123,37 @@ Arguments: `{'query': 'Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND r
 **DOI:** 10.1016/j.amjcard.2023.05.007
 **PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37269688/>
 
+#### Perioperative outcomes of hypertrophic cardiomyopathy: An insight from the National Readmission Database.
+**PMID:** 37979792
+**Authors:** Barssoum K, Abumoawad A, Chowdhury M, et al.
+**Source:** Int J Cardiol
+**Published:** 2024-03-01
+**Epub:** 2023-11-17
+**DOI:** 10.1016/j.ijcard.2023.131601
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37979792/>
 
-**Effective Query:** `Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND in-hospital AND admission`
+
+**Effective Query:** `Myocardial Infarction[MeSH] AND Heart Failure[MeSH] AND risk factors AND admission AND in-hospital`
 **Applied Filters:** none
 ````
 
 ## 3. Model call (scout > model)
 
-**Calls tool** `pubmed_search_articles` with `{'query': 'predictors of in-hospital heart failure after acute myocardial infarction', 'maxResults': 10, 'summaryCount': 10}`
+**Calls tool** `pubmed_search_articles` with `{'query': 'predictors of in-hospital heart failure after acute myocardial infarction', 'meshTerms': ['Myocardial Infarction', 'Heart Failure'], 'maxResults': 10, 'summaryCount': 10}`
 
 ## 4. Tool result: pubmed_search_articles
 
-Arguments: `{'query': 'predictors of in-hospital heart failure after acute myocardial infarction', 'maxResults': 10, 'summaryCount': 10}`
+Arguments: `{'query': 'predictors of in-hospital heart failure after acute myocardial infarction', 'meshTerms': ['Myocardial Infarction', 'Heart Failure'], 'maxResults': 10, 'summaryCount': 10}`
 
 ````
 ## PubMed Search Results
 **Query:** `predictors of in-hospital heart failure after acute myocardial infarction`
-**Returned:** 10 of 1257 | **Offset:** 0
-**Search URL:** <https://pubmed.ncbi.nlm.nih.gov/?term=predictors%20of%20in-hospital%20heart%20failure%20after%20acute%20myocardial%20infarction>
+**Returned:** 10 of 266 | **Offset:** 0
+**Search URL:** <https://pubmed.ncbi.nlm.nih.gov/?term=predictors%20of%20in-hospital%20heart%20failure%20after%20acute%20myocardial%20infarction%20AND%20(%22Myocardial%20Infarction%22%5BMeSH%20Terms%5D%20AND%20%22Heart%20Failure%22%5BMeSH%20Terms%5D)>
 
-**PMIDs:** 36638919, 37187290, 40956159, 39587472, 36328690, 39158557, 6997924, 41486117, 25681486, 41297708
+**PMIDs:** 39587472, 36638919, 6997924, 37295178, 35592331, 39957274, 37455355, 39158557, 35837763, 36577944
 
 ### Summaries
-
-#### Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.
-**PMID:** 36638919
-**Authors:** Liang J, Zhang Z
-**Source:** Int J Cardiol
-**Published:** 2023-03-15
-**Epub:** 2023-01-10
-**DOI:** 10.1016/j.ijcard.2023.01.002
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36638919/>
-
-#### In-hospital predictors for primary prevention of sudden death after acute myocardial infarction with cardiac dysfunction.
-**PMID:** 37187290
-**Authors:** Konagai N, Asaumi Y, Murata S, et al.
-**Source:** J Cardiol
-**Published:** 2023-09
-**Epub:** 2023-05-13
-**DOI:** 10.1016/j.jjcc.2023.05.003
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37187290/>
-
-#### Left Atrial Minimum Volume Index at Cardiac MRI Predicts Adverse Outcomes after Acute Myocardial Infarction.
-**PMID:** 40956159
-**Authors:** Wu J, Xiang J, Gu X, et al.
-**Source:** Radiology
-**Published:** 2025-09
-**DOI:** 10.1148/radiol.250078
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/40956159/>
 
 #### Risk analysis and risk prediction of in-hospital heart failure in patients with acute myocardial infarction after emergency intervention surgery.
 **PMID:** 39587472
@@ -191,13 +166,62 @@ Arguments: `{'query': 'predictors of in-hospital heart failure after acute myoca
 **PubMed:** <https://pubmed.ncbi.nlm.nih.gov/39587472/>
 **PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC11590280/>
 
-#### Risk Factors for In-Hospital Cardiac Arrest in Patients With ST-Segment Elevation Myocardial Infarction.
-**PMID:** 36328690
-**Authors:** Gong W, Yan Y, Wang X, et al.
-**Source:** J Am Coll Cardiol
-**Published:** 2022-11-08
-**DOI:** 10.1016/j.jacc.2022.08.797
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36328690/>
+#### Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.
+**PMID:** 36638919
+**Authors:** Liang J, Zhang Z
+**Source:** Int J Cardiol
+**Published:** 2023-03-15
+**Epub:** 2023-01-10
+**DOI:** 10.1016/j.ijcard.2023.01.002
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36638919/>
+
+#### Predictors of late hospital death in acute myocardial infarction.
+**PMID:** 6997924
+**Authors:** Norris RM, Sammel NL
+**Source:** Prog Cardiovasc Dis
+**Published:** 1980-09/1980-10
+**DOI:** 10.1016/0033-0620(80)90008-0
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/6997924/>
+
+#### Prevalence and Prognostic Implications of Worsening Renal Function After Acute Myocardial Infarction.
+**PMID:** 37295178
+**Authors:** Jin G, Seong SW, Kim MJ, et al.
+**Source:** Am J Cardiol
+**Published:** 2023-08-01
+**Epub:** 2023-06-07
+**DOI:** 10.1016/j.amjcard.2023.05.011
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37295178/>
+
+#### PRKAR1A and SDCBP Serve as Potential Predictors of Heart Failure Following Acute Myocardial Infarction.
+**PMID:** 35592331
+**Authors:** Chen Q, Su L, Liu C, et al.
+**Source:** Front Immunol
+**Published:** 2022
+**Epub:** 2022-05-03
+**DOI:** 10.3389/fimmu.2022.878876
+**PMCID:** PMC9110666
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/35592331/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC9110666/>
+
+#### Organ perfusion pressure predicts outcomes in cardiogenic shock patients.
+**PMID:** 39957274
+**Authors:** Bocchino PP, Frea S, Sacco A, et al.
+**Source:** Eur J Heart Fail
+**Published:** 2025-04
+**Epub:** 2025-02-16
+**DOI:** 10.1002/ejhf.3627
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/39957274/>
+
+#### Angio-based coronary functional assessment predicts 30-day new-onset heart failure after acute myocardial infarction.
+**PMID:** 37455355
+**Authors:** Luo D, Wu H, Zhou W, et al.
+**Source:** ESC Heart Fail
+**Published:** 2023-10
+**Epub:** 2023-07-16
+**DOI:** 10.1002/ehf2.14452
+**PMCID:** PMC10567646
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37455355/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC10567646/>
 
 #### Predictors and Long-Term Clinical Impact of Heart Failure With Improved Ejection Fraction After Acute Myocardial Infarction.
 **PMID:** 39158557
@@ -210,109 +234,45 @@ Arguments: `{'query': 'predictors of in-hospital heart failure after acute myoca
 **PubMed:** <https://pubmed.ncbi.nlm.nih.gov/39158557/>
 **PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC11963921/>
 
-#### Predictors of late hospital death in acute myocardial infarction.
-**PMID:** 6997924
-**Authors:** Norris RM, Sammel NL
-**Source:** Prog Cardiovasc Dis
-**Published:** 1980-09/1980-10
-**DOI:** 10.1016/0033-0620(80)90008-0
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/6997924/>
+#### Serum microRNAs are key predictors of long-term heart failure and cardiovascular death after myocardial infarction.
+**PMID:** 35837763
+**Authors:** Rincón LM, Rodríguez-Serrano M, Conde E, et al.
+**Source:** ESC Heart Fail
+**Published:** 2022-10
+**Epub:** 2022-07-15
+**DOI:** 10.1002/ehf2.13919
+**PMCID:** PMC9715833
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/35837763/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC9715833/>
 
-#### Systematic review and meta - analysis of risk prediction models for heart failure after PCI in patients with acute myocardial infarction.
-**PMID:** 41486117
-**Authors:** Lu X, Ding W, Lu J, et al.
+#### Coronary microcirculation dysfunction evaluated by myocardial contrast echocardiography predicts poor prognosis in patients with ST-segment elevation myocardial infarction after percutaneous coronary intervention.
+**PMID:** 36577944
+**Authors:** Wang L, Ma Y, Jin W, et al.
 **Source:** BMC Cardiovasc Disord
-**Published:** 2026-01-05
-**Epub:** 2026-01-05
-**DOI:** 10.1186/s12872-025-05406-z
-**PMCID:** PMC12870084
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/41486117/>
-**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC12870084/>
-
-#### Inflammatory markers in ST-elevation acute myocardial infarction.
-**PMID:** 25681486
-**Authors:** Seropian IM, Sonnino C, Van Tassell BW, et al.
-**Source:** Eur Heart J Acute Cardiovasc Care
-**Published:** 2016-08
-**Epub:** 2015-02-13
-**DOI:** 10.1177/2048872615568965
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/25681486/>
-
-#### Predictors of depressed left-ventricular ejection fraction after acute myocardial infarction.
-**PMID:** 41297708
-**Authors:** Eggers KM, Hamilton E, Jernberg T, et al.
-**Source:** Int J Cardiol
-**Published:** 2026-02-15
-**Epub:** 2025-11-24
-**DOI:** 10.1016/j.ijcard.2025.134040
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/41297708/>
+**Published:** 2022-12-28
+**Epub:** 2022-12-28
+**DOI:** 10.1186/s12872-022-02947-5
+**PMCID:** PMC9795674
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36577944/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC9795674/>
 
 
-**Effective Query:** `predictors of in-hospital heart failure after acute myocardial infarction`
-**Applied Filters:** none
+**Effective Query:** `predictors of in-hospital heart failure after acute myocardial infarction AND ("Myocardial Infarction"[MeSH Terms] AND "Heart Failure"[MeSH Terms])`
+**Applied Filters:**
+- **MeSH terms:** `Myocardial Infarction`, `Heart Failure`
 ````
 
 ## 5. Model call (scout > model)
 
-**Calls tool** `pubmed_fetch_articles` with `{'pmids': ['36638919', '39587472', '41486117', '37716540', '41297708']}`
+**Calls tool** `pubmed_fetch_articles` with `{'pmids': ['39587472', '36638919', '37455355', '37716540', '38685603']}`
 
 ## 6. Tool result: pubmed_fetch_articles
 
-Arguments: `{'pmids': ['36638919', '39587472', '41486117', '37716540', '41297708']}`
+Arguments: `{'pmids': ['39587472', '36638919', '37455355', '37716540', '38685603']}`
 
 ````
 ## PubMed Articles
 **Articles Returned:** 5
-
-### Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.
-
-**Authors (2):**
-- Jingkang Liang (J) [aff 0]
-- Zenghui Zhang (Z) [aff 1]
-
-**Affiliations:**
-- [0] Department of Health Management Center, The Second Affiliated Hospital of Guangdong Medical University, Zhanjiang 524000, China. Electronic address: 2996763168@qq.com.
-- [1] Department of Cardiology, The First Affiliated Hospital of Jinan University, Guangzhou 510000, China.
-
-**Journal:** International journal of cardiology, (Int J Cardiol), 2023 Mar 15, **375**, 104-109, pii: S0167-5273(23)00043-8, eISSN 1874-1754
-**Record Type:** journal-article
-**Type:** Journal Article
-**Language:** eng
-**PMID:** 36638919
-**DOI:** 10.1016/j.ijcard.2023.01.002
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36638919/>
-**Article Dates:** Electronic 2023-01-10
-
-#### Abstract
-BACKGROUND: Heart failure (HF) is a severe complication of acute ST-segment elevation myocardial infarction (STEMI). Its incidence is associated with myocardial infarction location, and it occurs frequently after acute anterior wall STEMI due to the larger infarct size. However, predictors of in-hospital HF in patients with acute anterior wall STEMI are inadequately defined. We aimed to determine potential predictors of HF in patients with acute anterior wall STEMI during hospitalization.
-
-METHODS: A total of 714 consecutive patients who were diagnosed with acute anterior wall STEMI and underwent primary percutaneous coronary intervention (pPCI) between January 2013 to August 2019 were enrolled retrospectively. We assigned the patients to HF and non-HF groups. The clinical parameters were subjected to univariate analysis and logistic regression analysis to obtain the independent predictors.
-
-RESULTS: Among the 714 patients enrolled in the present study (mean age 61.0 ± 13.8 years, men 80.7%), 387 (54.2%) had in-hospital HF. According to a multivariate logistic regression analysis, ventricular fibrillation (VF, OR: 5.66, 95% CI: 2.25-14.23, P < 0.001) was the most striking independent predictor of in-hospital HF. Community-acquired pneumonia (CAP, OR: 4.72, 95% CI: 2.44-9.10, P < 0.001), age (OR: 1.03, 95% CI: 1.01-1.04, P < 0.001), left ventricular ejection fraction (LVEF, OR: 0.96, 95% CI: 0.93-0.97, P < 0.001), and peak N-terminal pro-brain natriuretic peptide (NT-pro-BNP, OR: 1.06, 95% CI: 1.02-1.11, P = 0.006) were also independently associated with in-hospital HF.
-
-CONCLUSION: VF, CAP, age, LVEF, and peak NT-pro-BNP were independently associated with in-hospital HF in patients with acute anterior wall STEMI.
-
-**Keywords:** Heart failure, Myocardial infarction, Percutaneous coronary intervention, Predictor
-
-#### MeSH Terms
-- Male [D008297]
-- Humans [D006801]
-- Middle Aged [D008875]
-- Aged [D000368]
-- ST Elevation Myocardial Infarction [D000072657] (major) (diagnosis [Q000175], epidemiology [Q000453], surgery [Q000601])
-- Stroke Volume [D013318]
-- Retrospective Studies [D012189]
-- Biomarkers [D015415]
-- Ventricular Function, Left [D016277]
-- Anterior Wall Myocardial Infarction [D056988] (major) (diagnosis [Q000175], surgery [Q000601], complications [Q000150])
-- Myocardial Infarction [D009203] (major) (diagnosis [Q000175])
-- Percutaneous Coronary Intervention [D062645] (major)
-- Heart Failure [D006333] (major) (diagnosis [Q000175], epidemiology [Q000453], complications [Q000150])
-- Hospitals [D006761]
-
-#### Substances
-Find other records listing a substance with `pubmed_search_articles` for `"<name>"[nm]`.
-- Biomarkers [D015415]
 
 ### Risk analysis and risk prediction of in-hospital heart failure in patients with acute myocardial infarction after emergency intervention surgery.
 
@@ -368,53 +328,120 @@ CONCLUSIONS: The predictive model for the risk of in-hospital HF in AMI patients
 - Time Factors [D013997]
 - Inpatients [D007297]
 
-### Systematic review and meta - analysis of risk prediction models for heart failure after PCI in patients with acute myocardial infarction.
+### Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.
 
-**Authors (5):**
-- Xiongxiong Lu (X) [aff 0]
-- Wen Ding (W) [aff 1]
-- Jingyu Lu (J) [aff 2]
-- Jingyao Wang (J) [aff 3]
-- Bixin Wang (B) [aff 3]
+**Authors (2):**
+- Jingkang Liang (J) [aff 0]
+- Zenghui Zhang (Z) [aff 1]
 
 **Affiliations:**
-- [0] General Hospital of Ningxia Medical University, Ningxia, China. l1275144899@163.com.
-- [1] General Hospital of Ningxia Medical University, Ningxia, China. 1462167721@qq.com.
-- [2] General Hospital of Ningxia Medical University, Ningxia, China.
-- [3] Ningxia Medical University, Ningxia, China.
+- [0] Department of Health Management Center, The Second Affiliated Hospital of Guangdong Medical University, Zhanjiang 524000, China. Electronic address: 2996763168@qq.com.
+- [1] Department of Cardiology, The First Affiliated Hospital of Jinan University, Guangzhou 510000, China.
 
-**Journal:** BMC cardiovascular disorders, (BMC Cardiovasc Disord), 2026 Jan 5, **26**(1), 105, pii: 105, eISSN 1471-2261
+**Journal:** International journal of cardiology, (Int J Cardiol), 2023 Mar 15, **375**, 104-109, pii: S0167-5273(23)00043-8, eISSN 1874-1754
 **Record Type:** journal-article
-**Type:** Journal Article, Systematic Review, Meta-Analysis
+**Type:** Journal Article
 **Language:** eng
-**PMID:** 41486117
-**DOI:** 10.1186/s12872-025-05406-z
-**PMCID:** PMC12870084
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/41486117/>
-**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC12870084/>
-**Article Dates:** Electronic 2026-01-05
+**PMID:** 36638919
+**DOI:** 10.1016/j.ijcard.2023.01.002
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/36638919/>
+**Article Dates:** Electronic 2023-01-10
 
 #### Abstract
-BACKGROUND: The incidence of heart failure (HF) following percutaneous coronary intervention (PCI) in patients with acute myocardial infarction (AMI) remains relatively high, severely impairing long-term prognosis and quality of life. In recent years, advances in biomarker identification and imaging technologies have driven growing research into developing HF risk prediction models for AMI patients post-PCI. However, significant heterogeneity exists across current studies in terms of model construction methods, variable selection, and validation strategies, and the predictive performance and clinical utility of these models have not been systematically evaluated. OBJECTIVE: To systematically review published studies on risk prediction models for HF after PCI in AMI patients. DESIGN: Systematic review and meta-analysis. METHODS: Databases including PubMed, Web of Science, Embase, Cochrane Library, CNKI, VIP, Wanfang Data Knowledge Service Platform, Chinese Journal Full-text Database, and Chinese Biomedical Literature Database were searched from inception to December 31, 2024. Eligibility criteria included: study participants aged ≥ 18 years with AMI post-PCI; studies focused on HF risk prediction model development; and publication in Chinese or English. The Prediction Model Risk of Bias Assessment Tool (PROBAST) was used to evaluate bias risk in model construction and validation, and RevMan 5.4 software was employed for meta-analysis. RESULTS: A total of 14 studies involving 14 HF risk prediction models for AMI patients post-PCI were included. All studies adopted a retrospective design, with HF incidence ranging from 3.0% to 37.5%. The area under the curve (AUC) for model discriminative ability ranged from 0.847 to 0.966, indicating strong predictive power. Meta-analysis identified 19 effective predictors of post-PCI HF in AMI patients (all P < 0.05): Killip classification, age, Gensini score, D-dimer level, N-terminal pro-brain natriuretic peptide (NT-proBNP), neutrophil-to-high-density lipoprotein cholesterol ratio (NHR), neutrophil-to-lymphocyte ratio (NLR), modified shock index (MSI), troponin I, cardiac troponin T, serum creatinine, high-sensitivity C-reactive protein (hs-CRP), ventricular wall motion amplitude, hypertension, time from symptom onset to hospital admission, number of diseased coronary vessels, diabetes mellitus, arrhythmia, and cardiac structural changes. However, all studies were rated as high overall bias risk via PROBAST, primarily due to insufficient sample size, improper handling of continuous variables, and overreliance on univariate analysis for variable selection. CONCLUSION: While existing HF risk prediction models for AMI patients post-PCI demonstrate favorable discriminative ability, they suffer from high overall bias risk. Future studies should adhere strictly to PROBAST guidelines, optimize study design, improve methodological quality, and conduct multicenter prospective studies to validate model stability and generalizability. This will facilitate the development of clinically robust, applicable, and evidence-based prediction tools for clinical practice. TRIAL REGISTRATION: CRD42025639512
+BACKGROUND: Heart failure (HF) is a severe complication of acute ST-segment elevation myocardial infarction (STEMI). Its incidence is associated with myocardial infarction location, and it occurs frequently after acute anterior wall STEMI due to the larger infarct size. However, predictors of in-hospital HF in patients with acute anterior wall STEMI are inadequately defined. We aimed to determine potential predictors of HF in patients with acute anterior wall STEMI during hospitalization.
 
-**Keywords:** Acute myocardial infarction, Heart failure, Meta-analysis, Percutaneous coronary intervention, Risk prediction model, Systematic review
+METHODS: A total of 714 consecutive patients who were diagnosed with acute anterior wall STEMI and underwent primary percutaneous coronary intervention (pPCI) between January 2013 to August 2019 were enrolled retrospectively. We assigned the patients to HF and non-HF groups. The clinical parameters were subjected to univariate analysis and logistic regression analysis to obtain the independent predictors.
+
+RESULTS: Among the 714 patients enrolled in the present study (mean age 61.0 ± 13.8 years, men 80.7%), 387 (54.2%) had in-hospital HF. According to a multivariate logistic regression analysis, ventricular fibrillation (VF, OR: 5.66, 95% CI: 2.25-14.23, P < 0.001) was the most striking independent predictor of in-hospital HF. Community-acquired pneumonia (CAP, OR: 4.72, 95% CI: 2.44-9.10, P < 0.001), age (OR: 1.03, 95% CI: 1.01-1.04, P < 0.001), left ventricular ejection fraction (LVEF, OR: 0.96, 95% CI: 0.93-0.97, P < 0.001), and peak N-terminal pro-brain natriuretic peptide (NT-pro-BNP, OR: 1.06, 95% CI: 1.02-1.11, P = 0.006) were also independently associated with in-hospital HF.
+
+CONCLUSION: VF, CAP, age, LVEF, and peak NT-pro-BNP were independently associated with in-hospital HF in patients with acute anterior wall STEMI.
+
+**Keywords:** Heart failure, Myocardial infarction, Percutaneous coronary intervention, Predictor
 
 #### MeSH Terms
+- Male [D008297]
 - Humans [D006801]
-- Heart Failure [D006333] (major) (diagnosis [Q000175], epidemiology [Q000453], physiopathology [Q000503])
-- Risk Assessment [D018570]
-- Percutaneous Coronary Intervention [D062645] (major) (adverse effects [Q000009])
-- Myocardial Infarction [D009203] (major) (therapy [Q000628], diagnosis [Q000175], epidemiology [Q000453])
-- Predictive Value of Tests [D011237]
-- Treatment Outcome [D016896]
-- Decision Support Techniques [D003661] (major)
-- Female [D005260]
+- Middle Aged [D008875]
 - Aged [D000368]
+- ST Elevation Myocardial Infarction [D000072657] (major) (diagnosis [Q000175], epidemiology [Q000453], surgery [Q000601])
+- Stroke Volume [D013318]
+- Retrospective Studies [D012189]
+- Biomarkers [D015415]
+- Ventricular Function, Left [D016277]
+- Anterior Wall Myocardial Infarction [D056988] (major) (diagnosis [Q000175], surgery [Q000601], complications [Q000150])
+- Myocardial Infarction [D009203] (major) (diagnosis [Q000175])
+- Percutaneous Coronary Intervention [D062645] (major)
+- Heart Failure [D006333] (major) (diagnosis [Q000175], epidemiology [Q000453], complications [Q000150])
+- Hospitals [D006761]
+
+#### Substances
+Find other records listing a substance with `pubmed_search_articles` for `"<name>"[nm]`.
+- Biomarkers [D015415]
+
+### Angio-based coronary functional assessment predicts 30-day new-onset heart failure after acute myocardial infarction.
+
+**Authors (10):**
+- Da Luo (D) [aff 0,1,2]
+- Hui Wu (H) [aff 3,4]
+- Wenjie Zhou (W) [aff 0,1,2]
+- Jing Zhang (J) [aff 3,4]
+- Xing Jin (X) [aff 0,1,2]
+- Changwu Xu (C) [aff 0,1,2]
+- Bing Huang (B) [aff 0,1,2]
+- Jian Yang (J) [aff 3,4]
+- Hong Jiang (H) [aff 0,1,2]
+- Jing Chen (J) [aff 0,1,2]
+
+**Affiliations:**
+- [0] Department of Cardiology, Renmin Hospital of Wuhan University, Wuhan, China.
+- [1] Cardiovascular Research Institute of Wuhan University, Wuhan, China.
+- [2] Hubei Key Laboratory of Cardiology, Wuhan, China.
+- [3] Institute of Cardiovascular Disease, China Three Gorges University, Yichang, China.
+- [4] Department of Cardiology, Yichang Central People's Hospital, Yichang, China.
+
+**Journal:** ESC heart failure, (ESC Heart Fail), 2023 Oct, **10**(5), 2914-2926, eISSN 2055-5822
+**Record Type:** journal-article
+**Type:** Clinical Trial, Journal Article, Multicenter Study, Research Support, Non-U.S. Gov't
+**Language:** eng
+**PMID:** 37455355
+**DOI:** 10.1002/ehf2.14452
+**PMCID:** PMC10567646
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/37455355/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC10567646/>
+**Article Dates:** Electronic 2023-07-16
+
+#### Abstract
+AIMS: Suboptimal perfusion leading to heart failure (HF) often occurs after ST-segment elevation myocardial infarction (STEMI), despite restoration of epicardial coronary flow in primary percutaneous coronary intervention (PPCI) era. We determined the clinical implications of angio-based coronary functional assessment in evaluation of suboptimal perfusion and further outcomes among STEMI patients after successful PPCI.
+
+METHODS AND RESULTS: In this study, STEMI patients in the Chinese STEMI PPCI registry trial (NCT04996901) who achieved post-PPCI thrombolysis in myocardial infarction grade 3 flow were retrospectively screened. Post-procedural quantitative flow ratio (QFR), angio-based microvascular resistance (AMR), and coronary flow velocity (CFV) of the infarct-related artery were calculated. QFR and AMR measure epicardial stenosis severity and microvascular resistance, respectively. QFR+ was defined as QFR < 0.90 while QFR- was QFR ≥ 0.90. AMR+ was defined as AMR ≥ 250 mmHg\*s/m while AMR- was AMR < 250 mmHg\*s/m. The primary outcome was 30-day new-onset HF. The Kaplan-Meier curves were used to establish the associations between QFR, AMR, CFV, and HF incidences. The relationship between CFV and combined QFR and AMR indices was further assessed. Independent predictors were determined using Cox regression analysis. The receiver-operating characteristic curve was used to assess discriminant ability to predict HF. A total of 942 patients (mean age was 57.8 ± 11.7 years and 84.6% were men) were enrolled. Among them, 129 patients had new-onset HF episodes. Patients in the QFR-/AMR- group had a low risk of HF compared with those in the QFR+/AMR+ group (10.5% vs. 27.3%, P = 0.027). A higher CFV ≥ 17.4 cm/s was associated with low HF incidences as compared with CFV < 17.4 cm/s (10.3% vs. 16.8%, P = 0.005), whereas isolated QFR or AMR did not reveal any marked differences in HF incidences (P = 0.150 and 0.079, respectively). The highest and lowest medians of CFV were observed in the QFR-/AMR- and QFR+/AMR+ groups, respectively. CFV correlated well with the QFR/AMR ratio (adjusted R²  = 1, P < 0.001) and post-PPCI CFV was found to be an independent predictor of post-STEMI HF (adjusted hazard ratio: 0.61, 95% confidence interval: 0.41-0.90, P = 0.012). The area under curve estimate of the multivariable regression model was 0.749.
+
+CONCLUSIONS: CFV is an integrated coronary physiological assessment approach that incorporates epicardial and microcirculatory contributions. Patients with post-PPCI CFV < 17.4 cm/s were strongly associated with a high risk for post-STEMI HF, even achieving thrombolysis in myocardial infarction grade 3 flow. The immediate angio-based coronary functional assessment is a feasible tool for evaluating suboptimal perfusion and risk stratification.
+
+**Keywords:** Coronary flow velocity, Heart failure, Primary percutaneous coronary intervention, Quantitative flow ratio, ST-segment elevation myocardial infarction
+
+#### MeSH Terms
+- Aged [D000368]
+- Female [D005260]
+- Humans [D006801]
 - Male [D008297]
 - Middle Aged [D008875]
-- Risk Factors [D012307]
+- China [D002681] (epidemiology [Q000453])
+- Coronary Angiography [D017023] (major)
+- Coronary Circulation [D003326] (physiology [Q000502])
+- Coronary Vessels [D003331] (physiopathology [Q000503], diagnostic imaging [Q000000981])
+- Follow-Up Studies [D005500]
+- Heart Failure [D006333] (major) (physiopathology [Q000503], therapy [Q000628], complications [Q000150])
+- Percutaneous Coronary Intervention [D062645] (major)
+- Predictive Value of Tests [D011237]
+- Prognosis [D011379]
+- Registries [D012042]
+- Retrospective Studies [D012189]
+- ST Elevation Myocardial Infarction [D000072657] (major) (physiopathology [Q000503], complications [Q000150], diagnosis [Q000175])
 - Time Factors [D013997]
-- Aged, 80 and over [D000369]
+
+#### Data Banks
+Find other records citing an accession with `pubmed_search_articles` for `<accession>[si]`.
+- **ClinicalTrials.gov:** 04996901
 
 ### Heart Failure at Admission Complicating ST-Elevation Myocardial Infarction in a Middle-Income Country. Experience of the ARGEN-IAM-ST Registry.
 
@@ -461,53 +488,79 @@ Despite advances in the management of ST-elevation myocardial infarction (STEMI)
 - Registries [D012042]
 - Risk Factors [D012307]
 
-### Predictors of depressed left-ventricular ejection fraction after acute myocardial infarction.
+### Prognostic impact of heart failure admission in survivors of acute myocardial infarction.
 
-**Authors (4):**
-- K M Eggers (KM) [aff 0]
-- E Hamilton (E) [aff 1]
-- T Jernberg (T) [aff 1]
-- B Lindahl (B) [aff 2]
+**Authors (17):**
+- Satoshi Takeuchi (S) [aff 0] · ORCID 0000-0001-6649-358X
+- Satoshi Honda (S) [aff 1]
+- Kensaku Nishihira (K) [aff 2]
+- Sunao Kojima (S) [aff 3]
+- Misa Takegami (M) [aff 4,5]
+- Yasuhide Asaumi (Y) [aff 1]
+- Mike Saji (M) [aff 6]
+- Jun Yamashita (J) [aff 7]
+- Kiyoshi Hibi (K) [aff 8]
+- Jun Takahashi (J) [aff 0]
+- Yasuhiko Sakata (Y) [aff 1]
+- Morimasa Takayama (M) [aff 6]
+- Tetsuya Sumiyoshi (T) [aff 6]
+- Hisao Ogawa (H) [aff 9]
+- Kazuo Kimura (K) [aff 8]
+- Satoshi Yasuda (S) [aff 0]
+- JAMIR Investigators (collective)
 
 **Affiliations:**
-- [0] Department of Medical Sciences and Uppsala Clinical Research Center, Uppsala University, Uppsala, Sweden. Electronic address: kai.eggers@ucr.uu.se.
-- [1] Department of Clinical Sciences, Cardiology, Danderyd Hospital, Karolinska Institute, Stockholm, Sweden.
-- [2] Department of Medical Sciences and Uppsala Clinical Research Center, Uppsala University, Uppsala, Sweden.
+- [0] Department of Cardiovascular Medicine, Tohoku University, Sendai, Japan.
+- [1] Department of Cardiovascular Medicine, National Cerebral and Cardiovascular Centre, Suita, Japan.
+- [2] Department of Cardiovascular Medicine, Miyazaki Medical Association Hospital, Miyazaki, Japan.
+- [3] Department of Internal Medicine, Sakurajyuji Yatsushiro Rehabilitation Hospital, Yatsushiro, Japan.
+- [4] Department of Preventive Medicine and Epidemiologic Informatics, National Cerebral and Cardiovascular Centre, Suita, Japan.
+- [5] Department of Public Health and Health Policy, Graduate School of Medicine, The University of Tokyo, Tokyo, Japan.
+- [6] Department of Cardiology, Sakakibara Heart Institute, Fuchu, Japan.
+- [7] Department of Cardiology, Tokyo Medical University Hospital, Tokyo, Japan.
+- [8] Department of Cardiovascular Medicine, Yokohama City University Medical Centre, Yokohama, Japan.
+- [9] Kumamoto University, Kumamoto, Japan.
 
-**Journal:** International journal of cardiology, (Int J Cardiol), 2026 Feb 15, **445**, 134040, pii: S0167-5273(25)01083-6, eISSN 1874-1754
+**Journal:** ESC heart failure, (ESC Heart Fail), 2024 Aug, **11**(4), 2344-2353, eISSN 2055-5822
 **Record Type:** journal-article
-**Type:** Journal Article
+**Type:** Journal Article, Multicenter Study, Research Support, Non-U.S. Gov't
 **Language:** eng
-**PMID:** 41297708
-**DOI:** 10.1016/j.ijcard.2025.134040
-**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/41297708/>
-**Article Dates:** Electronic 2025-11-24
+**PMID:** 38685603
+**DOI:** 10.1002/ehf2.14790
+**PMCID:** PMC11287335
+**PubMed:** <https://pubmed.ncbi.nlm.nih.gov/38685603/>
+**PMC:** <https://pmc.ncbi.nlm.nih.gov/articles/PMC11287335/>
+**Article Dates:** Electronic 2024-04-29
 
 #### Abstract
-BACKGROUND: Impairment of left-ventricular ejection fraction (LVEF) is a major determinant of poor outcome after myocardial infarction (MI). Data on predisposing factors is however, scarce.
+AIMS: The incidence and prognosis of symptomatic heart failure following acute myocardial infarction (AMI) in the primary percutaneous coronary intervention era have rarely been reported in the literature. This study aimed to (i) determine the incidence of heart failure admission among AMI survivors, (ii) compare 1 year outcomes between patients with heart failure admission and those without, and (iii) identify the independent risk factors associated with heart failure admission.
 
-METHODS: Registry-based cohort study (SWEDEHEART) investigating 46,621 ST-elevation MI (STEMI) patients and 73,708 non-STEMI patients without a history of heart failure, admitted between 2010 and 2022. Associations of cardiovascular risk factors, comorbidities and angiographic features with LVEF <40 % were studied using multivariable logistic regressions.
+METHODS AND RESULTS: The Japan Acute Myocardial Infarction Registry is a prospective multicentre registry from which data on consecutively enrolled patients with AMI from 50 institutions between 2015 and 2017 were obtained. Among the 3411 patients enrolled, 3226 who survived until discharge were included in this study. The primary endpoint was all-cause mortality. The secondary endpoints were major adverse cardiovascular events (defined as cardiovascular mortality, non-fatal myocardial infarction, or non-fatal cerebral infarction) and major bleeding events corresponding to Bleeding Academic Research Consortium Type 3 or 5. Clinical outcomes were compared between the patients who were and were not admitted for heart failure. Over a median follow-up of 12 months, 124 patients (3.8%) were admitted due to heart failure. Independent risk factors for heart failure admission included older age, female sex, Killip class ≥2 on admission, left ventricular ejection fraction <40%, estimated glomerular filtration rate ≤30 mL/min/1.73 m², a history of malignancy, and non-use of angiotensin-converting enzyme inhibitors at discharge. The cumulative incidence of all-cause mortality was significantly higher in the heart failure admission group than in the no heart failure admission group (11.3% vs. 2.5%, P < 0.001). The rates of major adverse cardiovascular events (16.9% vs. 2.7%, P < 0.001) and major bleeding (6.5% vs. 1.6%, P < 0.001) were significantly higher in the heart failure admission group. Heart failure admission was associated with a higher risk of all-cause mortality, even after adjusting for potential confounders (adjusted hazard ratio: 2.41, 95% confidence interval: 1.33-4.39, P = 0.004).
 
-RESULTS: LVEF <0.40 was noted in 23,165 (47.6 %) STEMI patients and in 20,978 (28.5 %) non-STEMI patients. In minimally adjusted models, anterior MI localization emerged as the strongest predictor of LVEF <0.40 in STEMI (OR 4.32 [95 % CI 4.07-4.59]) while three-vessel disease/left main stenosis was one of the strongest predictors in non-STEMI (OR 1.78 [95 % CI 1.67-1.90]). Following full adjustment including angiographic data, smoking, diabetes, underweight, kidney disease and estimates of preexisting atherosclerotic disease (previous MI, previous stroke, peripheral artery disease) were independently associated with LVEF <0.40 in both MI types. Hypertension and overweight exhibited inverse associations with LVEF <0.40.
+CONCLUSIONS: Utilizing real-world data of the contemporary percutaneous coronary intervention era from the Japan Acute Myocardial Infarction Registry database, this study demonstrates that the heart failure admission of AMI survivors was significantly associated with higher all-cause mortality rates.
 
-CONCLUSIONS: Our results emphasize the need of early and complete revascularization in STEMI and non-STEMI, respectively, and of further investigation to inform customized cardioprotective pharmacotherapies in patients with concomitant risk factors and comorbidities, given their risk of developing impaired LVEF.
-
-**Keywords:** Heart failure, Left-ventricular ejection fraction, Myocardial infarction
+**Keywords:** Acute myocardial infarction, Heart failure, Percutaneous coronary intervention, Registry
 
 #### MeSH Terms
 - Humans [D006801]
 - Male [D008297]
+- Heart Failure [D006333] (major) (complications [Q000150], epidemiology [Q000453])
 - Female [D005260]
 - Aged [D000368]
-- Middle Aged [D008875]
-- Stroke Volume [D013318] (major) (physiology [Q000502])
-- Registries [D012042]
-- ST Elevation Myocardial Infarction [D000072657] (major) (physiopathology [Q000503], epidemiology [Q000453])
-- Cohort Studies [D015331]
+- Myocardial Infarction [D009203] (major) (complications [Q000150], epidemiology [Q000453], mortality [Q000401])
+- Prognosis [D011379]
+- Japan [D007564] (epidemiology [Q000453])
+- Registries [D012042] (major)
+- Prospective Studies [D011446]
+- Incidence [D015994]
+- Follow-Up Studies [D005500]
 - Risk Factors [D012307]
-- Ventricular Dysfunction, Left [D018487] (major) (physiopathology [Q000503], epidemiology [Q000453], diagnostic imaging [Q000000981], diagnosis [Q000175], etiology [Q000209])
-- Myocardial Infarction [D009203] (major) (physiopathology [Q000503], epidemiology [Q000453])
-- Predictive Value of Tests [D011237]
+- Middle Aged [D008875]
+- Survival Rate [D015996] (trends [Q000639])
+- Hospitalization [D006760] (statistics & numerical data [Q000706])
+- Cause of Death [D002423] (trends [Q000639])
+- Percutaneous Coronary Intervention [D062645]
+- Survivors [D017741] (statistics & numerical data [Q000706])
 ````
 
 ## 7. Model call (scout > model)
@@ -515,7 +568,7 @@ CONCLUSIONS: Our results emphasize the need of early and complete revascularizat
 **Reply**
 
 ````
-{"papers":[{"pmid":36638919,"title":"Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.","year":2023,"finding":"In 714 anterior STEMI patients treated with primary PCI, 54.2% had in-hospital HF, and independent predictors were ventricular fibrillation (OR 5.66), community-acquired pneumonia (OR 4.72), older age, lower LVEF and higher peak NT-proBNP."},{"pmid":39587472,"title":"Risk analysis and risk prediction of in-hospital heart failure in patients with acute myocardial infarction after emergency intervention surgery.","year":2024,"finding":"In 676 AMI patients after emergency PCI, 13.5% developed in-hospital HF, and age, troponin, D-dimer, LVEF and Gensini score were independent predictors, with a nomogram AUC of 0.87 in training and 0.85 in validation."},{"pmid":41486117,"title":"Systematic review and meta-analysis of risk prediction models for heart failure after PCI in patients with acute myocardial infarction.","year":2026,"finding":"Across 14 retrospective models (AUC 0.847-0.966, all at high risk of bias), the meta-analysis found 19 predictors, including Killip class, age, Gensini score, D-dimer, NT-proBNP, NLR, troponin, creatinine, hs-CRP, hypertension, diabetes, arrhythmia, number of diseased vessels and time from symptom onset to admission."},{"pmid":37716540,"title":"Heart Failure at Admission Complicating ST-Elevation Myocardial Infarction in a Middle-Income Country. Experience of the ARGEN-IAM-ST Registry.","year":2024,"finding":"In 3174 STEMI patients, 22.3% had HF at admission (Killip ≥2), and these patients were older, more often women, hypertensive and diabetic, received less reperfusion, and had much higher in-hospital mortality (28.4% vs 3.0%)."},{"pmid":41297708,"title":"Predictors of depressed left-ventricular ejection fraction after acute myocardial infarction.","year":2026,"finding":"In SWEDEHEART registry patients, anterior MI location was the strongest predictor of LVEF <40% in STEMI, and three-vessel or left main disease was a strong predictor in non-STEMI. Smoking, diabetes, underweight, kidney disease and prior MI, stroke or peripheral artery disease were also independently associated, while hypertension and overweight were inversely associated."}],"risk_factors":["older age","anterior MI location","reduced LVEF","higher Killip class at admission","elevated NT-proBNP","elevated troponin","elevated D-dimer","ventricular fibrillation / arrhythmia","community-acquired pneumonia","higher Gensini score / extent of coronary disease","multivessel or left main disease","diabetes","hypertension","chronic kidney disease / raised creatinine","smoking","underweight","prior MI, stroke or peripheral artery disease","raised inflammatory markers (hs-CRP, neutrophil-to-lymphocyte ratio)","longer time from symptom onset to admission","female sex","lack of reperfusion"]}
+{"papers":[{"pmid":39587472,"title":"Risk analysis and risk prediction of in-hospital heart failure in patients with acute myocardial infarction after emergency intervention surgery.","year":2024,"finding":"In 676 AMI patients who had emergency PCI, in-hospital HF occurred in 13.46%. Age, troponin, D-dimer, LVEF and Gensini score were independent predictors, and a nomogram built on them had an AUC of 0.87 in the training set and 0.85 in the validation set."},{"pmid":36638919,"title":"Predictors of in-hospital heart failure in patients with acute anterior wall ST-segment elevation myocardial infarction.","year":2023,"finding":"In 714 anterior STEMI patients treated with primary PCI, 54.2% had in-hospital HF. Ventricular fibrillation (OR 5.66), community-acquired pneumonia (OR 4.72), older age, lower LVEF and higher peak NT-proBNP were independent predictors."},{"pmid":37455355,"title":"Angio-based coronary functional assessment predicts 30-day new-onset heart failure after acute myocardial infarction.","year":2023,"finding":"Among 942 STEMI patients after successful PPCI, 129 developed new-onset HF within 30 days. Lower post-PCI coronary flow velocity (CFV) independently predicted HF (adjusted HR 0.61), and the multivariable model had an AUC of 0.749."},{"pmid":37716540,"title":"Heart Failure at Admission Complicating ST-Elevation Myocardial Infarction in a Middle-Income Country. Experience of the ARGEN-IAM-ST Registry.","year":2024,"finding":"In 3174 STEMI patients, 22.3% had HF at admission (Killip ≥2). These patients were older, more often female, hypertensive and diabetic, and received less reperfusion. HF at admission independently predicted in-hospital death (OR 4.88). This paper describes HF present at admission, not in-hospital HF that develops later."},{"pmid":38685603,"title":"Prognostic impact of heart failure admission in survivors of acute myocardial infarction.","year":2024,"finding":"In the JAMIR registry, 3.8% of 3226 AMI survivors were admitted for HF within about 12 months. Independent risk factors were older age, female sex, Killip class ≥2 on admission, LVEF <40%, eGFR ≤30, history of malignancy, and no ACE inhibitor at discharge. HF admission was associated with higher all-cause mortality."}],"risk_factors":["older age","female sex","Killip class ≥2 on admission","reduced LVEF (<40%)","elevated troponin","elevated peak NT-proBNP","elevated D-dimer","higher Gensini score (extent of coronary disease)","ventricular fibrillation","community-acquired pneumonia","severe renal dysfunction (eGFR ≤30)","history of malignancy","hypertension","diabetes","poor post-PCI coronary flow velocity (microvascular dysfunction)","no reperfusion or less reperfusion","no ACE inhibitor at discharge"]}
 ````
 
 ## 8. Model call (analyst > model)
@@ -535,12 +588,12 @@ A literature scout has listed risk factors from published studies. Consider them
 Which risk factors at admission predict in-hospital heart failure after a myocardial infarction, what does the published literature say about them, and how well can our data predict it? Build the best model our data can support.
 
 What the Literature Scout found in PubMed:
-- PMID 36638919 (2023): In 714 anterior STEMI patients treated with primary PCI, 54.2% had in-hospital HF, and independent predictors were ventricular fibrillation (OR 5.66), community-acquired pneumonia (OR 4.72), older age, lower LVEF and higher peak NT-proBNP.
-- PMID 39587472 (2024): In 676 AMI patients after emergency PCI, 13.5% developed in-hospital HF, and age, troponin, D-dimer, LVEF and Gensini score were independent predictors, with a nomogram AUC of 0.87 in training and 0.85 in validation.
-- PMID 41486117 (2026): Across 14 retrospective models (AUC 0.847-0.966, all at high risk of bias), the meta-analysis found 19 predictors, including Killip class, age, Gensini score, D-dimer, NT-proBNP, NLR, troponin, creatinine, hs-CRP, hypertension, diabetes, arrhythmia, number of diseased vessels and time from symptom onset to admission.
-- PMID 37716540 (2024): In 3174 STEMI patients, 22.3% had HF at admission (Killip ≥2), and these patients were older, more often women, hypertensive and diabetic, received less reperfusion, and had much higher in-hospital mortality (28.4% vs 3.0%).
-- PMID 41297708 (2026): In SWEDEHEART registry patients, anterior MI location was the strongest predictor of LVEF <40% in STEMI, and three-vessel or left main disease was a strong predictor in non-STEMI. Smoking, diabetes, underweight, kidney disease and prior MI, stroke or peripheral artery disease were also independently associated, while hypertension and overweight were inversely associated.
-Risk factors named: older age, anterior MI location, reduced LVEF, higher Killip class at admission, elevated NT-proBNP, elevated troponin, elevated D-dimer, ventricular fibrillation / arrhythmia, community-acquired pneumonia, higher Gensini score / extent of coronary disease, multivessel or left main disease, diabetes, hypertension, chronic kidney disease / raised creatinine, smoking, underweight, prior MI, stroke or peripheral artery disease, raised inflammatory markers (hs-CRP, neutrophil-to-lymphocyte ratio), longer time from symptom onset to admission, female sex, lack of reperfusion
+- PMID 39587472 (2024): In 676 AMI patients who had emergency PCI, in-hospital HF occurred in 13.46%. Age, troponin, D-dimer, LVEF and Gensini score were independent predictors, and a nomogram built on them had an AUC of 0.87 in the training set and 0.85 in the validation set.
+- PMID 36638919 (2023): In 714 anterior STEMI patients treated with primary PCI, 54.2% had in-hospital HF. Ventricular fibrillation (OR 5.66), community-acquired pneumonia (OR 4.72), older age, lower LVEF and higher peak NT-proBNP were independent predictors.
+- PMID 37455355 (2023): Among 942 STEMI patients after successful PPCI, 129 developed new-onset HF within 30 days. Lower post-PCI coronary flow velocity (CFV) independently predicted HF (adjusted HR 0.61), and the multivariable model had an AUC of 0.749.
+- PMID 37716540 (2024): In 3174 STEMI patients, 22.3% had HF at admission (Killip ≥2). These patients were older, more often female, hypertensive and diabetic, and received less reperfusion. HF at admission independently predicted in-hospital death (OR 4.88). This paper describes HF present at admission, not in-hospital HF that develops later.
+- PMID 38685603 (2024): In the JAMIR registry, 3.8% of 3226 AMI survivors were admitted for HF within about 12 months. Independent risk factors were older age, female sex, Killip class ≥2 on admission, LVEF <40%, eGFR ≤30, history of malignancy, and no ACE inhibitor at discharge. HF admission was associated with higher all-cause mortality.
+Risk factors named: older age, female sex, Killip class ≥2 on admission, reduced LVEF (<40%), elevated troponin, elevated peak NT-proBNP, elevated D-dimer, higher Gensini score (extent of coronary disease), ventricular fibrillation, community-acquired pneumonia, severe renal dysfunction (eGFR ≤30), history of malignancy, hypertension, diabetes, poor post-PCI coronary flow velocity (microvascular dysfunction), no reperfusion or less reperfusion, no ACE inhibitor at discharge
 ````
 
 **Calls tool** `list_variables` with `{'when_known': 'admission'}`
@@ -657,160 +710,163 @@ pentoxifylline_icu | binary | admission | 0.9% missing | Use of Trental (pentoxi
 
 ## 10. Model call (analyst > model)
 
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+**Calls tool** `profile_data` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis']}`
 
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+**Calls tool** `compare_groups` with `{'variable': 'pulmonary_edema_at_admission'}`
 
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'random_forest', 'missing_strategy': 'impute'}`
+**Calls tool** `compare_groups` with `{'variable': 'age'}`
 
-## 11. Tool result: train_model
+**Calls tool** `compare_groups` with `{'variable': 'sex'}`
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+**Calls tool** `compare_groups` with `{'variable': 'prior_heart_failure'}`
 
-````
-Model: penalized_logistic; missing data: impute; 33 predictors (37 model columns).
-Patients used: 1,700 of 1,700 (394 events; 10.6 events per column).
-5-fold cross-validation: AUC 0.738 ± 0.030, PR-AUC 0.543 ± 0.040 (a model with no skill scores 0.232), Brier 0.144 ± 0.007.
-L1 penalty kept 24 of 37 columns (strongest 15):
-  prior_heart_failure=1: OR 2.15 per 1 SD
-  age: OR 1.33 per 1 SD
-  cardiogenic_shock_at_admission: OR 0.78 per 1 SD
-  chronic_bronchitis: OR 1.23 per 1 SD
-  lateral_mi: OR 1.23 per 1 SD
-  diabetes: OR 1.22 per 1 SD
-  ecg_rhythm_atrial_fibrillation: OR 1.15 per 1 SD
-  serum_alt: OR 1.11 per 1 SD
-  ventricular_tachycardia_at_admission: OR 1.05 per 1 SD
-  recent_coronary_disease=1: OR 1.05 per 1 SD
-  atrial_fibrillation_at_admission: OR 1.04 per 1 SD
-  anterior_mi: OR 1.04 per 1 SD
-  serum_ast: OR 1.04 per 1 SD
-  prior_heart_failure=3: OR 1.02 per 1 SD
-  systolic_bp_icu: OR 1.02 per 1 SD
-````
+## 11. Tool result: compare_groups
 
-## 12. Tool result: train_model
-
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'random_forest', 'missing_strategy': 'impute'}`
+Arguments: `{'variable': 'sex'}`
 
 ````
-Model: random_forest; missing data: impute; 33 predictors (37 model columns).
-Patients used: 1,700 of 1,700 (394 events; 10.6 events per column).
-5-fold cross-validation: AUC 0.722 ± 0.036, PR-AUC 0.528 ± 0.030 (a model with no skill scores 0.232), Brier 0.149 ± 0.005.
-Most important columns (mean drop in AUC when shuffled, first test fold):
-  prior_heart_failure=1: 0.107
-  lateral_mi: 0.032
-  age: 0.031
-  diabetes: 0.020
-  anterior_mi: 0.015
-  recent_coronary_disease=1: 0.007
-  atrial_fibrillation_at_admission: 0.007
-  hypertension_stage: 0.006
-  white_blood_cell_count: 0.005
-  ecg_rhythm_atrial_fibrillation: 0.004
+sex: Sex. Patients with data: 1,700 (0 missing, left out).
+  0 (female): 635 patients, 181 with heart failure (28.5%)
+  1 (male): 1065 patients, 213 with heart failure (20.0%)
+Chi-square test: p < 0.001.
 ````
 
-## 13. Tool result: train_model
+## 12. Tool result: compare_groups
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_mi_count', 'angina_functional_class', 'hypertension_stage', 'prior_heart_failure', 'history_arrhythmia', 'diabetes', 'obesity', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_tachycardia_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'posterior_mi', 'right_ventricular_mi', 'ecg_rhythm_sinus_tachycardia', 'ecg_rhythm_atrial_fibrillation', 'ecg_complete_lbbb', 'time_to_hospital', 'white_blood_cell_count', 'esr', 'serum_potassium', 'serum_sodium', 'serum_ast', 'serum_alt', 'systolic_bp_icu', 'diastolic_bp_icu', 'recent_coronary_disease', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
-
-````
-Model: gradient_boosting; missing data: native; 33 predictors (37 model columns).
-Patients used: 1,700 of 1,700 (394 events; 10.6 events per column).
-5-fold cross-validation: AUC 0.728 ± 0.033, PR-AUC 0.552 ± 0.038 (a model with no skill scores 0.232), Brier 0.145 ± 0.007.
-Most important columns (mean drop in AUC when shuffled, first test fold):
-  prior_heart_failure=1: 0.107
-  age: 0.065
-  lateral_mi: 0.044
-  diabetes: 0.010
-  white_blood_cell_count: 0.009
-  serum_sodium: 0.008
-  anterior_mi: 0.005
-  cardiogenic_shock_at_admission: 0.004
-  chronic_bronchitis: 0.002
-  ecg_rhythm_atrial_fibrillation: 0.002
-````
-
-## 14. Model call (analyst > model)
-
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
-
-**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
-
-## 15. Tool result: train_model
-
-Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
+Arguments: `{'variable': 'pulmonary_edema_at_admission'}`
 
 ````
-Model: logistic; missing data: impute; 16 predictors (19 model columns).
-Patients used: 1,700 of 1,700 (394 events; 20.7 events per column).
-5-fold cross-validation: AUC 0.738 ± 0.032, PR-AUC 0.548 ± 0.039 (a model with no skill scores 0.232), Brier 0.145 ± 0.007.
-Adjusted odds ratios per 1-unit increase (15 smallest p-values):
-  prior_heart_failure=1: OR 29.76 (95% CI 16.19-54.70), p < 0.001
-  chronic_bronchitis: OR 2.52 (95% CI 1.67-3.80), p < 0.001
-  age: OR 1.03 (95% CI 1.01-1.04), p < 0.001
-  diabetes: OR 1.97 (95% CI 1.39-2.79), p < 0.001
-  lateral_mi: OR 1.36 (95% CI 1.15-1.61), p < 0.001
-  atrial_fibrillation_at_admission: OR 2.23 (95% CI 1.42-3.50), p < 0.001
-  cardiogenic_shock_at_admission: OR 0.08 (95% CI 0.01-0.59), p = 0.013
-  anterior_mi: OR 1.07 (95% CI 0.97-1.18), p = 0.192
-  inferior_mi: OR 1.07 (95% CI 0.96-1.20), p = 0.224
-  prior_heart_failure=3: OR 1.49 (95% CI 0.65-3.45), p = 0.349
-  prior_mi_count: OR 1.07 (95% CI 0.92-1.25), p = 0.380
-  prior_heart_failure=4: OR 1.56 (95% CI 0.54-4.49), p = 0.406
-  time_to_hospital: OR 0.98 (95% CI 0.94-1.03), p = 0.410
-  white_blood_cell_count: OR 0.98 (95% CI 0.95-1.02), p = 0.441
-  ventricular_fibrillation_at_admission: OR 0.60 (95% CI 0.12-2.93), p = 0.532
+pulmonary_edema_at_admission: Pulmonary edema at the time of admission to the ICU. Patients with data: 1,688 (12 missing, left out).
+  0 (no): 1578 patients, 365 with heart failure (23.1%)
+  1 (yes): 110 patients, 27 with heart failure (24.5%)
+Chi-square test: p = 0.734.
 ````
 
-## 16. Tool result: train_model
+## 13. Tool result: compare_groups
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+Arguments: `{'variable': 'prior_heart_failure'}`
 
 ````
-Model: gradient_boosting; missing data: native; 16 predictors (19 model columns).
-Patients used: 1,700 of 1,700 (394 events; 20.7 events per column).
-5-fold cross-validation: AUC 0.737 ± 0.036, PR-AUC 0.541 ± 0.048 (a model with no skill scores 0.232), Brier 0.145 ± 0.007.
-Most important columns (mean drop in AUC when shuffled, first test fold):
-  prior_heart_failure=1: 0.104
-  age: 0.067
-  lateral_mi: 0.036
-  anterior_mi: 0.016
-  white_blood_cell_count: 0.015
-  cardiogenic_shock_at_admission: 0.008
-  atrial_fibrillation_at_admission: 0.007
-  diabetes: 0.003
-  chronic_bronchitis: 0.003
-  prior_heart_failure=3: 0.000
+prior_heart_failure: Presence of chronic heart failure in the anamnesis. Patients with data: 1,646 (54 missing, left out).
+  0 (no chronic heart failure): 1468 patients, 275 with heart failure (18.7%)
+  1 (stage I): 103 patients, 90 with heart failure (87.4%)
+  2 (stage II (right ventricular systolic dysfunction)): 27 patients, 6 with heart failure (22.2%)
+  3 (stage II (left ventricular systolic dysfunction)): 29 patients, 9 with heart failure (31.0%)
+  4 (stage IIB (left and right ventricular systolic dysfunction)): 19 patients, 6 with heart failure (31.6%)
+Chi-square test: p < 0.001.
 ````
 
-## 17. Model call (analyst > model)
+## 14. Tool result: compare_groups
 
-**Calls tool** `profile_data` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis']}`
+Arguments: `{'variable': 'age'}`
 
-## 18. Tool result: profile_data
+````
+age: Age of patient. Patients with data: 1,692 (8 missing, left out).
+Mean 64.85 with heart failure vs 60.95 without (p < 0.001, Welch t-test).
+````
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis']}`
+## 15. Tool result: profile_data
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis']}`
 
 ````
 Patients: 1,700; heart failure events: 394 (23.2%).
-Predictors: 16 (19 model columns after encoding categorical variables).
+Predictors: 20 (23 model columns after encoding categorical variables).
 Known only after admission: none.
-Complete cases (no missing predictor): 1,336 patients, 311 events.
-Events per model column in complete cases: 16.4 (logistic regression usually needs about 10 or more).
+Complete cases (no missing predictor): 835 patients, 202 events.
+Events per model column in complete cases: 8.8 (logistic regression usually needs about 10 or more).
 Predictors with more than 30% missing: none.
-Missing per predictor: age 0.5%, sex 0.0%, prior_heart_failure 3.2%, prior_mi_count 0.2%, diabetes 0.6%, hypertension_stage 0.5%, anterior_mi 4.9%, lateral_mi 4.7%, inferior_mi 4.7%, cardiogenic_shock_at_admission 0.9%, pulmonary_edema_at_admission 0.7%, atrial_fibrillation_at_admission 0.8%, ventricular_fibrillation_at_admission 0.7%, time_to_hospital 7.4%, white_blood_cell_count 7.4%, chronic_bronchitis 0.4%.
+Missing per predictor: age 0.5%, sex 0.0%, prior_heart_failure 3.2%, prior_mi_count 0.2%, hypertension_stage 0.5%, diabetes 0.6%, pulmonary_edema_at_admission 0.7%, cardiogenic_shock_at_admission 0.9%, ventricular_fibrillation_at_admission 0.7%, anterior_mi 4.9%, inferior_mi 4.7%, systolic_bp_icu 15.7%, diastolic_bp_icu 15.7%, angina_functional_class 4.3%, atrial_fibrillation_at_admission 0.8%, ecg_rhythm_sinus_tachycardia 8.9%, white_blood_cell_count 7.4%, time_to_hospital 7.4%, serum_potassium 21.8%, chronic_bronchitis 0.4%.
 ````
 
-## 19. Model call (analyst > model)
+## 16. Model call (analyst > model)
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+
+**Calls tool** `train_model` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'white_blood_cell_count', 'time_to_hospital'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
+
+## 17. Tool result: train_model
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'white_blood_cell_count', 'time_to_hospital'], 'model_type': 'logistic', 'missing_strategy': 'impute'}`
+
+````
+Model: logistic; missing data: impute; 15 predictors (18 model columns).
+Patients used: 1,700 of 1,700 (394 events; 21.9 events per column).
+5-fold cross-validation: AUC 0.720 ± 0.027, PR-AUC 0.522 ± 0.039 (a model with no skill scores 0.232), Brier 0.148 ± 0.006.
+Adjusted odds ratios per 1-unit increase (15 smallest p-values):
+  prior_heart_failure=1: OR 28.90 (95% CI 15.79-52.88), p < 0.001
+  age: OR 1.03 (95% CI 1.02-1.04), p < 0.001
+  diabetes: OR 1.91 (95% CI 1.35-2.70), p < 0.001
+  atrial_fibrillation_at_admission: OR 2.11 (95% CI 1.35-3.29), p = 0.001
+  anterior_mi: OR 1.14 (95% CI 1.05-1.25), p = 0.003
+  cardiogenic_shock_at_admission: OR 0.08 (95% CI 0.01-0.60), p = 0.014
+  angina_functional_class: OR 0.92 (95% CI 0.80-1.05), p = 0.204
+  prior_heart_failure=3: OR 1.67 (95% CI 0.72-3.85), p = 0.231
+  prior_mi_count: OR 1.09 (95% CI 0.93-1.28), p = 0.302
+  time_to_hospital: OR 0.98 (95% CI 0.93-1.03), p = 0.371
+  prior_heart_failure=4: OR 1.55 (95% CI 0.53-4.49), p = 0.420
+  inferior_mi: OR 1.04 (95% CI 0.94-1.17), p = 0.437
+  ventricular_fibrillation_at_admission: OR 0.56 (95% CI 0.11-2.73), p = 0.473
+  white_blood_cell_count: OR 0.99 (95% CI 0.95-1.03), p = 0.589
+  pulmonary_edema_at_admission: OR 0.90 (95% CI 0.53-1.51), p = 0.684
+````
+
+## 18. Tool result: train_model
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute'}`
+
+````
+Model: penalized_logistic; missing data: impute; 20 predictors (23 model columns).
+Patients used: 1,700 of 1,700 (394 events; 17.1 events per column).
+5-fold cross-validation: AUC 0.731 ± 0.029, PR-AUC 0.538 ± 0.038 (a model with no skill scores 0.232), Brier 0.145 ± 0.006.
+L1 penalty kept 13 of 23 columns (strongest 15):
+  prior_heart_failure=1: OR 2.12 per 1 SD
+  age: OR 1.30 per 1 SD
+  cardiogenic_shock_at_admission: OR 0.80 per 1 SD
+  chronic_bronchitis: OR 1.23 per 1 SD
+  diabetes: OR 1.22 per 1 SD
+  atrial_fibrillation_at_admission: OR 1.17 per 1 SD
+  anterior_mi: OR 1.16 per 1 SD
+  prior_heart_failure=3: OR 1.03 per 1 SD
+  prior_heart_failure=4: OR 1.02 per 1 SD
+  time_to_hospital: OR 0.99 per 1 SD
+  systolic_bp_icu: OR 1.01 per 1 SD
+  sex: OR 1.00 per 1 SD
+  prior_mi_count: OR 1.00 per 1 SD
+````
+
+## 19. Tool result: train_model
+
+Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'gradient_boosting', 'missing_strategy': 'native'}`
+
+````
+Model: gradient_boosting; missing data: native; 20 predictors (23 model columns).
+Patients used: 1,700 of 1,700 (394 events; 17.1 events per column).
+5-fold cross-validation: AUC 0.706 ± 0.022, PR-AUC 0.516 ± 0.033 (a model with no skill scores 0.232), Brier 0.149 ± 0.006.
+Most important columns (mean drop in AUC when shuffled, first test fold):
+  prior_heart_failure=1: 0.094
+  age: 0.051
+  anterior_mi: 0.022
+  diabetes: 0.010
+  cardiogenic_shock_at_admission: 0.007
+  atrial_fibrillation_at_admission: 0.007
+  chronic_bronchitis: 0.003
+  angina_functional_class: 0.003
+  ecg_rhythm_sinus_tachycardia: 0.002
+  white_blood_cell_count: 0.002
+````
+
+## 20. Model call (analyst > model)
 
 **Reply**
 
 ````
-{"model_type":"logistic","missing_strategy":"impute","predictors":["age","sex","prior_heart_failure","prior_mi_count","diabetes","hypertension_stage","anterior_mi","lateral_mi","inferior_mi","cardiogenic_shock_at_admission","pulmonary_edema_at_admission","atrial_fibrillation_at_admission","ventricular_fibrillation_at_admission","time_to_hospital","white_blood_cell_count","chronic_bronchitis"],"cv_auc":0.738,"pr_auc":0.548,"key_drivers":["prior_heart_failure (stage I: OR 29.76, 95% CI 16.19-54.70)","chronic_bronchitis (OR 2.52)","diabetes (OR 1.97)","atrial_fibrillation_at_admission (OR 2.23)","age (OR 1.03 per year)","lateral_mi (OR 1.36 per category step)","cardiogenic_shock_at_admission (OR 0.08, inverse; very few cases, wide CI 0.01-0.59)"],"rationale":"I used a 16-predictor logistic model with median imputation. It has 20.7 events per model column and uses all 1,700 patients. Cross-validated AUC is 0.738 and PR-AUC is 0.548; a model with no skill scores 0.232 on PR-AUC. That is modest discrimination. Calibration looks acceptable (Brier 0.145). Penalized logistic (AUC 0.738, PR-AUC 0.543), gradient boosting (0.728 and 0.737 on the full and the compact predictor sets) and random forest (0.722) did no better. The ceiling for admission-only data therefore looks like about 0.73-0.74. The compact logistic model is the simplest and the easiest to interpret.\n\nLiterature risk factors I used, where an admission variable exists: older age (confirmed, OR 1.03 per year); anterior MI location (kept, but not significant here, OR 1.07, p=0.19; lateral MI was significant); diabetes (confirmed); hypertension (hypertension_stage included, not a top driver); ventricular fibrillation and arrhythmia (VF at admission and atrial fibrillation at admission; AF was confirmed, VF was not significant and very rare); prior MI (prior_mi_count, not significant); female sex (sex included); time from symptom onset to admission (time_to_hospital, not significant); and inflammatory markers (white cell count as a proxy, not significant). Killip class and pulmonary edema and shock at admission were represented by pulmonary_edema_at_admission and cardiogenic_shock_at_admission. Shock had an inverse association, probably because few patients had it and because early death competes with the outcome.\n\nLiterature factors I left out because they are not in the dataset or are not known at admission: LVEF, NT-proBNP, troponin, D-dimer, hs-CRP, NLR, Gensini score, number of diseased vessels, community-acquired pneumonia, creatinine and kidney disease, smoking, underweight (BMI), stroke or PAD history, and PCI or reperfusion status. Fibrinolysis variables exist, but I excluded them because treatment given after arrival is not a clean baseline risk factor, and the data have no definition of reperfusion.\n\nNew finding: previous chronic heart failure (stage I) was by far the strongest predictor. Its very large OR of about 30 suggests that this is partly a recording artefact: a heart failure history entry may overlap with the outcome label. It should be interpreted cautiously. Other caveats: single-centre data from 1992-1995, the cross-validated estimates are internal only, and the data have no external validation."}
+{"model_type":"penalized_logistic","missing_strategy":"impute","predictors":["age","sex","prior_heart_failure","prior_mi_count","hypertension_stage","diabetes","pulmonary_edema_at_admission","cardiogenic_shock_at_admission","ventricular_fibrillation_at_admission","anterior_mi","inferior_mi","systolic_bp_icu","diastolic_bp_icu","angina_functional_class","atrial_fibrillation_at_admission","ecg_rhythm_sinus_tachycardia","white_blood_cell_count","time_to_hospital","serum_potassium","chronic_bronchitis"],"cv_auc":0.731,"pr_auc":0.538,"key_drivers":["prior_heart_failure (stage I: 87.4% vs 18.7% with no prior HF)","age (mean 64.9 with HF vs 61.0 without)","diabetes (adjusted OR 1.91 in the plain logistic model)","atrial_fibrillation_at_admission (adjusted OR 2.11)","anterior_mi (adjusted OR 1.14 per ECG category)","sex (female 28.5% vs male 20.0% unadjusted; the penalized model kept sex but gave it almost no weight once other variables were included)"],"rationale":"The best model was L1-penalized logistic regression with median imputation on 20 admission-only variables and all 1,700 patients (394 events). Cross-validated AUC was 0.731 and PR-AUC 0.538 (no-skill PR-AUC is 0.232), with Brier 0.145. Two alternatives did slightly worse: gradient boosting with native missing handling (AUC 0.706, PR-AUC 0.516) and a 15-variable plain logistic model (AUC 0.720, PR-AUC 0.522). Discrimination is moderate. Literature risk factors I used, mapped to what our data has: older age (supported, p<0.001); female sex (supported unadjusted); hypertension (included via hypertension_stage, not a leading driver); diabetes (supported); ventricular fibrillation (included as ventricular_fibrillation_at_admission, no signal, OR 0.56, CI 0.11-2.73); Killip class 2 or higher (nearest proxies are pulmonary_edema_at_admission and cardiogenic_shock_at_admission). Pulmonary edema showed no association, 24.5% vs 23.1% (p=0.73). Cardiogenic shock was inversely associated, likely because few of those patients survive long enough to be recorded with chronic HF, so I would not read it as protective. Prior heart failure was not on the scout's list, but it is known at admission and is the strongest predictor. Its pattern is odd: stage I is 87% but stages II and IIB are only 22-32%, which suggests coding or data-quality problems, so I treat it with caution. Literature risk factors I left out because they are not available or not known at admission: LVEF, troponin, NT-proBNP, D-dimer, Gensini score and post-PCI coronary flow velocity (none are in the dataset, and several are measured after admission); eGFR and history of malignancy (not recorded); community-acquired pneumonia (it develops during the stay, and chronic_bronchitis was only a weak stand-in); no ACE inhibitor at discharge (a discharge variable). Reperfusion is only partly covered, since the fibrinolysis variables were not included. PMID 37716540 describes HF already present at admission, which is a different outcome from ours. The scout's studies used PCI cohorts with different outcome definitions (in-hospital, 30-day and 12-month HF), so their AUCs of 0.75 to 0.87 are not directly comparable. Those studies relied on LVEF and biomarkers that we lack. Limitations: this is one hospital from 1992-1995, and the AUC is cross-validated internally with no external validation. Permutation importances came from a single test fold."}
 ````
 
-## 20. Model call (reviewer > model)
+## 21. Model call (reviewer > model)
 
 **system message**
 
@@ -826,48 +882,51 @@ Answer 'revise' if any line FAILs or a literature risk factor is neither used no
 ````
 The analyst's answer:
 {
-  "model_type": "logistic",
+  "model_type": "penalized_logistic",
   "missing_strategy": "impute",
   "predictors": [
     "age",
     "sex",
     "prior_heart_failure",
     "prior_mi_count",
-    "diabetes",
     "hypertension_stage",
-    "anterior_mi",
-    "lateral_mi",
-    "inferior_mi",
-    "cardiogenic_shock_at_admission",
+    "diabetes",
     "pulmonary_edema_at_admission",
-    "atrial_fibrillation_at_admission",
+    "cardiogenic_shock_at_admission",
     "ventricular_fibrillation_at_admission",
-    "time_to_hospital",
+    "anterior_mi",
+    "inferior_mi",
+    "systolic_bp_icu",
+    "diastolic_bp_icu",
+    "angina_functional_class",
+    "atrial_fibrillation_at_admission",
+    "ecg_rhythm_sinus_tachycardia",
     "white_blood_cell_count",
+    "time_to_hospital",
+    "serum_potassium",
     "chronic_bronchitis"
   ],
-  "cv_auc": 0.738,
-  "pr_auc": 0.548,
+  "cv_auc": 0.731,
+  "pr_auc": 0.538,
   "key_drivers": [
-    "prior_heart_failure (stage I: OR 29.76, 95% CI 16.19-54.70)",
-    "chronic_bronchitis (OR 2.52)",
-    "diabetes (OR 1.97)",
-    "atrial_fibrillation_at_admission (OR 2.23)",
-    "age (OR 1.03 per year)",
-    "lateral_mi (OR 1.36 per category step)",
-    "cardiogenic_shock_at_admission (OR 0.08, inverse; very few cases, wide CI 0.01-0.59)"
+    "prior_heart_failure (stage I: 87.4% vs 18.7% with no prior HF)",
+    "age (mean 64.9 with HF vs 61.0 without)",
+    "diabetes (adjusted OR 1.91 in the plain logistic model)",
+    "atrial_fibrillation_at_admission (adjusted OR 2.11)",
+    "anterior_mi (adjusted OR 1.14 per ECG category)",
+    "sex (female 28.5% vs male 20.0% unadjusted; the penalized model kept sex but gave it almost no weight once other variables were included)"
   ],
-  "rationale": "I used a 16-predictor logistic model with median imputation. It has 20.7 events per model column and uses all 1,700 patients. Cross-validated AUC is 0.738 and PR-AUC is 0.548; a model with no skill scores 0.232 on PR-AUC. That is modest discrimination. Calibration looks acceptable (Brier 0.145). Penalized logistic (AUC 0.738, PR-AUC 0.543), gradient boosting (0.728 and 0.737 on the full and the compact predictor sets) and random forest (0.722) did no better. The ceiling for admission-only data therefore looks like about 0.73-0.74. The compact logistic model is the simplest and the easiest to interpret.\n\nLiterature risk factors I used, where an admission variable exists: older age (confirmed, OR 1.03 per year); anterior MI location (kept, but not significant here, OR 1.07, p=0.19; lateral MI was significant); diabetes (confirmed); hypertension (hypertension_stage included, not a top driver); ventricular fibrillation and arrhythmia (VF at admission and atrial fibrillation at admission; AF was confirmed, VF was not significant and very rare); prior MI (prior_mi_count, not significant); female sex (sex included); time from symptom onset to admission (time_to_hospital, not significant); and inflammatory markers (white cell count as a proxy, not significant). Killip class and pulmonary edema and shock at admission were represented by pulmonary_edema_at_admission and cardiogenic_shock_at_admission. Shock had an inverse association, probably because few patients had it and because early death competes with the outcome.\n\nLiterature factors I left out because they are not in the dataset or are not known at admission: LVEF, NT-proBNP, troponin, D-dimer, hs-CRP, NLR, Gensini score, number of diseased vessels, community-acquired pneumonia, creatinine and kidney disease, smoking, underweight (BMI), stroke or PAD history, and PCI or reperfusion status. Fibrinolysis variables exist, but I excluded them because treatment given after arrival is not a clean baseline risk factor, and the data have no definition of reperfusion.\n\nNew finding: previous chronic heart failure (stage I) was by far the strongest predictor. Its very large OR of about 30 suggests that this is partly a recording artefact: a heart failure history entry may overlap with the outcome label. It should be interpreted cautiously. Other caveats: single-centre data from 1992-1995, the cross-validated estimates are internal only, and the data have no external validation."
+  "rationale": "The best model was L1-penalized logistic regression with median imputation on 20 admission-only variables and all 1,700 patients (394 events). Cross-validated AUC was 0.731 and PR-AUC 0.538 (no-skill PR-AUC is 0.232), with Brier 0.145. Two alternatives did slightly worse: gradient boosting with native missing handling (AUC 0.706, PR-AUC 0.516) and a 15-variable plain logistic model (AUC 0.720, PR-AUC 0.522). Discrimination is moderate. Literature risk factors I used, mapped to what our data has: older age (supported, p<0.001); female sex (supported unadjusted); hypertension (included via hypertension_stage, not a leading driver); diabetes (supported); ventricular fibrillation (included as ventricular_fibrillation_at_admission, no signal, OR 0.56, CI 0.11-2.73); Killip class 2 or higher (nearest proxies are pulmonary_edema_at_admission and cardiogenic_shock_at_admission). Pulmonary edema showed no association, 24.5% vs 23.1% (p=0.73). Cardiogenic shock was inversely associated, likely because few of those patients survive long enough to be recorded with chronic HF, so I would not read it as protective. Prior heart failure was not on the scout's list, but it is known at admission and is the strongest predictor. Its pattern is odd: stage I is 87% but stages II and IIB are only 22-32%, which suggests coding or data-quality problems, so I treat it with caution. Literature risk factors I left out because they are not available or not known at admission: LVEF, troponin, NT-proBNP, D-dimer, Gensini score and post-PCI coronary flow velocity (none are in the dataset, and several are measured after admission); eGFR and history of malignancy (not recorded); community-acquired pneumonia (it develops during the stay, and chronic_bronchitis was only a weak stand-in); no ACE inhibitor at discharge (a discharge variable). Reperfusion is only partly covered, since the fibrinolysis variables were not included. PMID 37716540 describes HF already present at admission, which is a different outcome from ours. The scout's studies used PCI cohorts with different outcome definitions (in-hospital, 30-day and 12-month HF), so their AUCs of 0.75 to 0.87 are not directly comparable. Those studies relied on LVEF and biomarkers that we lack. Limitations: this is one hospital from 1992-1995, and the AUC is cross-validated internally with no external validation. Permutation importances came from a single test fold."
 }
 
-Risk factors named by the Literature Scout: older age, anterior MI location, reduced LVEF, higher Killip class at admission, elevated NT-proBNP, elevated troponin, elevated D-dimer, ventricular fibrillation / arrhythmia, community-acquired pneumonia, higher Gensini score / extent of coronary disease, multivessel or left main disease, diabetes, hypertension, chronic kidney disease / raised creatinine, smoking, underweight, prior MI, stroke or peripheral artery disease, raised inflammatory markers (hs-CRP, neutrophil-to-lymphocyte ratio), longer time from symptom onset to admission, female sex, lack of reperfusion
+Risk factors named by the Literature Scout: older age, female sex, Killip class ≥2 on admission, reduced LVEF (<40%), elevated troponin, elevated peak NT-proBNP, elevated D-dimer, higher Gensini score (extent of coronary disease), ventricular fibrillation, community-acquired pneumonia, severe renal dysfunction (eGFR ≤30), history of malignancy, hypertension, diabetes, poor post-PCI coronary flow velocity (microvascular dysfunction), no reperfusion or less reperfusion, no ACE inhibitor at discharge
 ````
 
-**Calls tool** `verify_answer` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'logistic', 'missing_strategy': 'impute', 'reported_auc': 0.738}`
+**Calls tool** `verify_answer` with `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute', 'reported_auc': 0.731}`
 
 **Calls tool** `list_variables` with `{'when_known': 'any'}`
 
-## 21. Tool result: list_variables
+## 22. Tool result: list_variables
 
 Arguments: `{'when_known': 'any'}`
 
@@ -986,21 +1045,21 @@ ticlopidine_icu | binary | admission | 0.9% missing | Use of Ticlid (ticlopidine
 pentoxifylline_icu | binary | admission | 0.9% missing | Use of Trental (pentoxifylline) in the ICU
 ````
 
-## 22. Tool result: verify_answer
+## 23. Tool result: verify_answer
 
-Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'diabetes', 'hypertension_stage', 'anterior_mi', 'lateral_mi', 'inferior_mi', 'cardiogenic_shock_at_admission', 'pulmonary_edema_at_admission', 'atrial_fibrillation_at_admission', 'ventricular_fibrillation_at_admission', 'time_to_hospital', 'white_blood_cell_count', 'chronic_bronchitis'], 'model_type': 'logistic', 'missing_strategy': 'impute', 'reported_auc': 0.738}`
+Arguments: `{'predictors': ['age', 'sex', 'prior_heart_failure', 'prior_mi_count', 'hypertension_stage', 'diabetes', 'pulmonary_edema_at_admission', 'cardiogenic_shock_at_admission', 'ventricular_fibrillation_at_admission', 'anterior_mi', 'inferior_mi', 'systolic_bp_icu', 'diastolic_bp_icu', 'angina_functional_class', 'atrial_fibrillation_at_admission', 'ecg_rhythm_sinus_tachycardia', 'white_blood_cell_count', 'time_to_hospital', 'serum_potassium', 'chronic_bronchitis'], 'model_type': 'penalized_logistic', 'missing_strategy': 'impute', 'reported_auc': 0.731}`
 
 ````
-PASS: reported AUC 0.738, our re-run 0.738 (must be within 0.02)
+PASS: reported AUC 0.731, our re-run 0.731 (must be within 0.02)
 PASS: every predictor is known at admission
 PASS: no predictor has more than 30% missing values
-PASS: at least 10 events per model column (20.7 here)
+PASS: at least 10 events per model column (17.1 here)
 ````
 
-## 23. Model call (reviewer > model)
+## 24. Model call (reviewer > model)
 
 **Reply**
 
 ````
-{"verdict":"revise","issues":["Raised inflammatory markers are on the literature list, and the data has esr (11.9% missing, known at admission). The analyst used only white_blood_cell_count as a proxy and neither used esr nor explained leaving it out.","The literature lists pneumonia, and the data has chronic_pneumonia (0.4% missing, known at admission). The analyst said pneumonia is not in the dataset, and chronic_pneumonia is neither used nor explained as a poor match for community-acquired pneumonia.","Underweight is on the literature list, and the data has obesity (a BMI-related history variable). The analyst called BMI unavailable and did not say why obesity is not a usable proxy or was excluded."]}
+{"verdict":"revise","issues":["Reperfusion is a literature risk factor (no reperfusion or less reperfusion), and the data has seven admission-time fibrinolysis variables (fibrinolysis_streptase, fibrinolysis_celiasum_250k_iu through 3m_iu, fibrinolysis_streptodecase_1_5m_iu), each with under 1% missing. The analyst used none of them and only noted that they were not included, without giving a reason. Either add a combined any-fibrinolysis predictor or explain why it was left out."]}
 ````
